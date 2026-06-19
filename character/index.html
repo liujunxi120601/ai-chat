@@ -6,10 +6,15 @@
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>角色卡工坊</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.2/dist/full.min.css" rel="stylesheet" type="text/css" />
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/localforage@1.10.0/dist/localforage.min.js"></script>
+    <script src="../assets/js/card-utils.js"></script>
+    <script src="../assets/js/ui-select.js"></script>
     <style>
         html {
             -webkit-text-size-adjust: 100% !important;
@@ -18,11 +23,39 @@
             text-size-adjust: 100% !important;
         }
 
+        :root {
+            --app-font-modern: "Inter", "HarmonyOS Sans SC", "MiSans", "OPPO Sans", "Alibaba PuHuiTi 3.0", "Alibaba PuHuiTi", "Noto Sans SC", "Source Han Sans SC", "Microsoft YaHei UI", "Segoe UI", Arial, sans-serif;
+            --app-font-system: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+            --app-font-serif: "Lora", "Noto Serif SC", "Source Han Serif SC", "Source Han Serif CN", STSong, SimSun, Georgia, Cambria, "Times New Roman", Times, serif;
+            --app-font-family: var(--app-font-modern);
+        }
+
+        :root[data-app-font="serif"] {
+            --app-font-family: var(--app-font-serif);
+        }
+
+        :root[data-app-font="modern"] {
+            --app-font-family: var(--app-font-modern);
+        }
+
+        :root[data-app-font="system"] {
+            --app-font-family: var(--app-font-system);
+        }
+
         body {
-            font-family: 'PingFang SC', 'PingFang TC', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+            font-family: var(--app-font-family) !important;
+            font-weight: 500 !important;
             background-color: #f3f4f6;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+        }
+
+        #app {
+            font-family: var(--app-font-family) !important;
+        }
+
+        .font-normal {
+            font-weight: 500 !important;
         }
 
         ::-webkit-scrollbar {
@@ -190,6 +223,10 @@
             },
             theme: {
                 extend: {
+                    fontFamily: {
+                        sans: ['var(--app-font-family)', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Microsoft YaHei', 'Noto Sans SC', 'Arial', 'sans-serif'],
+                        serif: ['var(--app-font-serif)', 'Lora', 'Noto Serif SC', 'Source Han Serif SC', 'Source Han Serif CN', 'STSong', 'SimSun', 'Georgia', 'Cambria', 'Times New Roman', 'Times', 'serif']
+                    },
                     colors: {
                         primary: '#65c3c8',
                         secondary: '#ef9fbc',
@@ -316,7 +353,7 @@
                         <path
                             d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
                     </svg>
-                    API 设置
+                    设置
                 </h3>
                 <div class="flex flex-col gap-4">
                     <!-- 仅保留风格和流式输出设定 -->
@@ -331,6 +368,13 @@
                                     class="absolute -right-3 -top-3 w-8 h-8 bg-primary/20 rounded-full blur-xl"></div>
                             </div>
                             <div class="border rounded-xl p-3 cursor-pointer transition-all duration-200 flex items-center justify-center gap-2 relative overflow-hidden select-none group"
+                                :class="options.avatarStyle === 'comicDoujin' ? 'border-primary bg-primary/10 text-primary ring-2 ring-primary/20 shadow-sm' : 'border-base-300 bg-base-100 hover:border-base-content/30 hover:bg-base-200/50'"
+                                @click="options.avatarStyle = 'comicDoujin'">
+                                <span class="font-bold text-sm">漫画同人风</span>
+                                <div v-if="options.avatarStyle === 'comicDoujin'"
+                                    class="absolute -right-3 -top-3 w-8 h-8 bg-primary/20 rounded-full blur-xl"></div>
+                            </div>
+                            <div class="border rounded-xl p-3 cursor-pointer transition-all duration-200 flex items-center justify-center gap-2 relative overflow-hidden select-none group"
                                 :class="options.avatarStyle === 'hentai' ? 'border-secondary bg-secondary/10 text-secondary ring-2 ring-secondary/20 shadow-sm' : 'border-base-300 bg-base-100 hover:border-base-content/30 hover:bg-base-200/50'"
                                 @click="options.avatarStyle = 'hentai'">
                                 <span class="font-bold text-sm">2.5D唯美风</span>
@@ -338,9 +382,16 @@
                                     class="absolute -right-3 -top-3 w-8 h-8 bg-secondary/20 rounded-full blur-xl"></div>
                             </div>
                             <div class="border rounded-xl p-3 cursor-pointer transition-all duration-200 flex items-center justify-center gap-2 relative overflow-hidden select-none group"
+                                :class="options.avatarStyle === 'lolita25d' ? 'border-pink-400 bg-pink-50 text-pink-600 ring-2 ring-pink-200 shadow-sm' : 'border-base-300 bg-base-100 hover:border-base-content/30 hover:bg-base-200/50'"
+                                @click="options.avatarStyle = 'lolita25d'">
+                                <span class="font-bold text-sm">2.5D唯美风（萝）</span>
+                                <div v-if="options.avatarStyle === 'lolita25d'"
+                                    class="absolute -right-3 -top-3 w-8 h-8 bg-pink-300/40 rounded-full blur-xl"></div>
+                            </div>
+                            <div class="border rounded-xl p-3 cursor-pointer transition-all duration-200 flex items-center justify-center gap-2 relative overflow-hidden select-none group"
                                 :class="options.avatarStyle === 'anime' ? 'border-accent bg-accent/10 text-accent ring-2 ring-accent/20 shadow-sm' : 'border-base-300 bg-base-100 hover:border-base-content/30 hover:bg-base-200/50'"
                                 @click="options.avatarStyle = 'anime'">
-                                <span class="font-bold text-sm">本子动漫风</span>
+                                <span class="font-bold text-sm">本子里番风</span>
                                 <div v-if="options.avatarStyle === 'anime'"
                                     class="absolute -right-3 -top-3 w-8 h-8 bg-accent/20 rounded-full blur-xl"></div>
                             </div>
@@ -355,7 +406,7 @@
                     </div>
                     <div class="grid grid-cols-1 gap-3 mt-2">
                         <div
-                            class="form-control w-full bg-base-200/40 rounded-xl border border-base-300/60 p-3 hover:border-primary/40 transition-colors">
+                            class="form-control w-full rounded-xl border border-base-300/60 p-3 hover:border-primary/40 transition-colors">
                             <label class="label cursor-pointer justify-between p-0">
                                 <span class="label-text font-medium flex items-center gap-2">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
@@ -839,24 +890,21 @@
                                         <div class="card-body p-6 gap-5">
                                             <div class="form-control">
                                                 <label
-                                                    class="label font-bold text-base-content/70 text-sm uppercase tracking-wide">角色卡名称
-                                                    Name</label>
+                                                    class="label font-bold text-base-content/70 text-sm uppercase tracking-wide">角色卡名称</label>
                                                 <input type="text" v-model="currentCharacter.name"
                                                     class="input input-bordered lg:h-12 xl:h-14 lg:text-lg xl:text-xl lg:font-bold bg-base-200/30 focus:bg-base-100 transition-colors"
                                                     placeholder="角色卡的名字" />
                                             </div>
                                             <div class="form-control">
                                                 <label
-                                                    class="label font-bold text-base-content/70 text-sm uppercase tracking-wide">简短描述
-                                                    Description</label>
+                                                    class="label font-bold text-base-content/70 text-sm uppercase tracking-wide">简短描述</label>
                                                 <textarea v-model="currentCharacter.description"
                                                     class="textarea textarea-bordered h-64 bg-base-200/30 focus:bg-base-100 transition-colors leading-relaxed"
                                                     placeholder="角色卡的简要描述..."></textarea>
                                             </div>
                                             <div class="form-control">
                                                 <label
-                                                    class="label font-bold text-base-content/70 text-sm uppercase tracking-wide">设定
-                                                    Personality</label>
+                                                    class="label font-bold text-base-content/70 text-sm uppercase tracking-wide">设定</label>
                                                 <textarea v-model="currentCharacter.personality"
                                                     class="textarea textarea-bordered h-64 bg-base-200/30 focus:bg-base-100 transition-colors leading-relaxed"
                                                     placeholder="角色卡的设定..."></textarea>
@@ -864,7 +912,7 @@
                                             <div class="form-control">
                                                 <label
                                                     class="label font-bold text-base-content/70 text-sm uppercase tracking-wide justify-between cursor-default">
-                                                    <span>开场白 First Message</span>
+                                                    <span>开场白</span>
                                                     <button @click="showPreview = true"
                                                         class="btn btn-xs btn-ghost text-primary gap-1 hover:bg-primary/10">
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
@@ -926,6 +974,11 @@
                                         世界书条目
                                     </h3>
                                     <div class="flex gap-2">
+                                        <label class="btn btn-sm btn-outline border-base-300 cursor-pointer">
+                                            导入
+                                            <input type="file" class="hidden" accept=".json,application/json"
+                                                @change="importWorldInfoFile" />
+                                        </label>
                                         <button @click="openSelectiveExport('world')" class="btn btn-sm btn-outline border-base-300"
                                             :disabled="worldInfo.length === 0">导出</button>
                                         <button @click="addWorldEntry"
@@ -1002,33 +1055,6 @@
                                                         <div class="form-control">
                                                             <label
                                                                 class="label py-0 cursor-pointer gap-2 justify-start">
-                                                                <input type="checkbox" v-model="entry.excludeRecursion"
-                                                                    class="checkbox checkbox-xs checkbox-primary" />
-                                                                <span
-                                                                    class="label-text text-xs font-bold text-base-content/50">不可被递归</span>
-                                                            </label>
-                                                        </div>
-                                                        <div class="form-control">
-                                                            <label
-                                                                class="label py-0 cursor-pointer gap-2 justify-start">
-                                                                <input type="checkbox" v-model="entry.matchWholeWords"
-                                                                    class="checkbox checkbox-xs checkbox-primary" />
-                                                                <span
-                                                                    class="label-text text-xs font-bold text-base-content/50">全词匹配</span>
-                                                            </label>
-                                                        </div>
-                                                        <div class="form-control">
-                                                            <label
-                                                                class="label py-0 cursor-pointer gap-2 justify-start">
-                                                                <input type="checkbox" v-model="entry.caseSensitive"
-                                                                    class="checkbox checkbox-xs checkbox-primary" />
-                                                                <span
-                                                                    class="label-text text-xs font-bold text-base-content/50">区分大小写</span>
-                                                            </label>
-                                                        </div>
-                                                        <div class="form-control">
-                                                            <label
-                                                                class="label py-0 cursor-pointer gap-2 justify-start">
                                                                 <input type="checkbox" v-model="entry.useProbability"
                                                                     class="checkbox checkbox-xs checkbox-primary" />
                                                                 <span
@@ -1041,13 +1067,10 @@
                                                         <div class="form-control col-span-2 md:col-span-2">
                                                             <label class="label py-0"><span
                                                                     class="label-text text-xs font-bold text-base-content/50">插入位置</span></label>
-                                                            <select v-model="entry.position"
-                                                                class="select select-bordered select-xs w-full">
-                                                                <option v-for="option in worldInfoPositionOptions"
-                                                                    :key="option.value" :value="option.value">
-                                                                    {{ option.label }}
-                                                                </option>
-                                                            </select>
+                                                            <custom-select v-model="entry.position" :options="worldInfoPositionOptions"
+                                                                button-class="h-8 min-h-8 rounded-lg border-base-300 bg-base-200/30 px-3 py-1 text-xs text-base-content"
+                                                                menu-class="text-xs">
+                                                            </custom-select>
                                                         </div>
                                                         <div class="form-control">
                                                             <label class="label py-0"><span
@@ -1073,18 +1096,6 @@
                                                             <input type="number" v-model.number="entry.scanDepth"
                                                                 class="input input-bordered input-xs w-full" />
                                                         </div>
-                                                    </div>
-                                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 pt-2">
-                                                        <label class="label py-0 cursor-pointer gap-2 justify-start">
-                                                            <input type="checkbox" v-model="entry.preventRecursion"
-                                                                class="checkbox checkbox-xs checkbox-primary" />
-                                                            <span class="label-text text-xs font-bold text-base-content/50">阻止后续递归</span>
-                                                        </label>
-                                                        <label class="label py-0 cursor-pointer gap-2 justify-start">
-                                                            <input type="checkbox" v-model="entry.delayUntilRecursion"
-                                                                class="checkbox checkbox-xs checkbox-primary" />
-                                                            <span class="label-text text-xs font-bold text-base-content/50">仅递归触发</span>
-                                                        </label>
                                                     </div>
                                                 </div>
 
@@ -1124,6 +1135,11 @@
                                         正则脚本
                                     </h3>
                                     <div class="flex gap-2">
+                                        <label class="btn btn-sm btn-outline border-base-300 cursor-pointer">
+                                            导入
+                                            <input type="file" class="hidden" accept=".json,application/json"
+                                                @change="importRegexFile" />
+                                        </label>
                                         <button @click="openSelectiveExport('regex')" class="btn btn-sm btn-outline border-base-300"
                                             :disabled="regexScripts.length === 0">导出</button>
                                         <button @click="addRegexScript"
@@ -1151,95 +1167,92 @@
                                             <div class="flex flex-col gap-3 pt-2 pb-4">
                                                 <div class="form-control">
                                                     <label class="label py-1"><span
-                                                            class="label-text text-xs font-bold text-base-content/50 uppercase">脚本名称
-                                                            Name</span></label>
+                                                            class="label-text text-xs font-bold text-base-content/50 uppercase">脚本名称 NAME</span></label>
                                                     <input type="text" v-model="script.name"
-                                                        class="input input-bordered input-sm bg-base-200/30 focus:bg-base-100"
+                                                        class="input input-bordered input-sm bg-base-200/30"
                                                         placeholder="脚本名称" />
                                                 </div>
-                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                <div class="grid grid-cols-1 gap-3">
                                                     <div class="form-control">
                                                         <label class="label py-1"><span
-                                                                class="label-text text-xs font-bold text-base-content/50 uppercase">正则
-                                                                 正则表达式</span></label>
+                                                                class="label-text text-xs font-bold text-base-content/50 uppercase">正则表达式</span></label>
                                                         <div class="flex flex-col gap-1">
                                                             <input type="text" v-model="script.regex"
-                                                                class="input input-bordered input-sm font-mono text-xs bg-base-200/30 w-full"
+                                                                class="input input-bordered input-sm font-mono text-sm bg-base-200/30 w-full"
                                                                  placeholder="正则表达式" />
-                                                            <div class="flex items-center gap-2 px-1">
+                                                            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 px-1 min-h-7">
                                                                 <span
-                                                                    class="text-[10px] font-bold text-base-content/30 uppercase">标志:</span>
+                                                                    class="text-xs font-bold text-base-content/50">标签:</span>
                                                                 <label
-                                                                    class="cursor-pointer flex items-center gap-1 hover:text-primary transition-colors"
+                                                                    class="label py-0 cursor-pointer gap-1 justify-start hover:text-primary transition-colors"
                                                                     title="全局匹配"><input type="checkbox"
                                                                         :checked="hasFlag(script, 'g')"
                                                                         @change="toggleFlag(script, 'g')"
-                                                                        class="checkbox checkbox-xs checkbox-primary rounded-sm w-3 h-3" /><span
-                                                                        class="text-[10px] font-mono font-bold">g</span></label>
+                                                                        class="checkbox checkbox-xs checkbox-primary" /><span
+                                                                        class="label-text text-xs font-mono font-bold">g</span></label>
                                                                 <label
-                                                                    class="cursor-pointer flex items-center gap-1 hover:text-primary transition-colors"
+                                                                    class="label py-0 cursor-pointer gap-1 justify-start hover:text-primary transition-colors"
                                                                     title="忽略大小写"><input type="checkbox"
                                                                         :checked="hasFlag(script, 'i')"
                                                                         @change="toggleFlag(script, 'i')"
-                                                                        class="checkbox checkbox-xs checkbox-primary rounded-sm w-3 h-3" /><span
-                                                                        class="text-[10px] font-mono font-bold">i</span></label>
+                                                                        class="checkbox checkbox-xs checkbox-primary" /><span
+                                                                        class="label-text text-xs font-mono font-bold">i</span></label>
                                                                 <label
-                                                                    class="cursor-pointer flex items-center gap-1 hover:text-primary transition-colors"
+                                                                    class="label py-0 cursor-pointer gap-1 justify-start hover:text-primary transition-colors"
                                                                     title="多行模式"><input type="checkbox"
                                                                         :checked="hasFlag(script, 'm')"
                                                                         @change="toggleFlag(script, 'm')"
-                                                                        class="checkbox checkbox-xs checkbox-primary rounded-sm w-3 h-3" /><span
-                                                                        class="text-[10px] font-mono font-bold">m</span></label>
+                                                                        class="checkbox checkbox-xs checkbox-primary" /><span
+                                                                        class="label-text text-xs font-mono font-bold">m</span></label>
                                                                 <label
-                                                                    class="cursor-pointer flex items-center gap-1 hover:text-primary transition-colors"
+                                                                    class="label py-0 cursor-pointer gap-1 justify-start hover:text-primary transition-colors"
                                                                     title="点号匹配换行"><input
                                                                         type="checkbox" :checked="hasFlag(script, 's')"
                                                                         @change="toggleFlag(script, 's')"
-                                                                        class="checkbox checkbox-xs checkbox-primary rounded-sm w-3 h-3" /><span
-                                                                        class="text-[10px] font-mono font-bold">s</span></label>
+                                                                        class="checkbox checkbox-xs checkbox-primary" /><span
+                                                                        class="label-text text-xs font-mono font-bold">s</span></label>
                                                                 <input type="text" v-model="script.flags"
-                                                                    class="input input-bordered input-xs font-mono w-20 h-6 px-2"
+                                                                    class="input input-bordered input-xs font-mono w-20 h-7 px-2 bg-base-200/30"
                                                                     placeholder="gim" />
                                                             </div>
                                                         </div>
                                                     </div>
                                                     <div class="form-control">
                                                         <label class="label py-1"><span
-                                                                class="label-text text-xs font-bold text-base-content/50 uppercase">替换
-                                                                替换内容</span></label>
+                                                                class="label-text text-xs font-bold text-base-content/50 uppercase">替换内容</span></label>
                                                         <textarea v-model="script.replacement" rows="4"
-                                                            class="textarea textarea-bordered text-xs font-mono bg-base-200/30 min-h-28"
+                                                            class="textarea textarea-bordered h-32 text-sm font-mono bg-base-200/30"
                                                             placeholder="支持 $1、$2 等捕获组引用"></textarea>
                                                     </div>
                                                 </div>
 
                                                 <!-- Advanced Regex Settings -->
-                                                <div class="flex flex-col gap-2 bg-base-200/30 p-3 rounded-lg mt-2">
-                                                    <div class="flex flex-wrap gap-4 items-center">
-                                                        <div
-                                                            class="flex items-center gap-2 border-r border-base-content/10 pr-3">
-                                                            <span
-                                                                class="text-xs font-bold text-base-content/50">生效位置:</span>
-                                                            <label class="cursor-pointer flex items-center gap-1"><input
-                                                                    type="checkbox" :value="1"
-                                                                    v-model="script.placement"
-                                                                    class="checkbox checkbox-xs" /><span
-                                                                    class="text-xs">用户</span></label>
-                                                            <label class="cursor-pointer flex items-center gap-1"><input
-                                                                    type="checkbox" :value="2"
-                                                                    v-model="script.placement"
-                                                                    class="checkbox checkbox-xs" /><span
-                                                                    class="text-xs">AI</span></label>
-                                                        </div>
-                                                        <label class="cursor-pointer flex items-center gap-1"><input
-                                                                type="checkbox" v-model="script.markdownOnly"
-                                                                class="checkbox checkbox-xs" /><span class="text-xs">仅 Markdown</span></label>
-                                                        <label class="cursor-pointer flex items-center gap-1"><input
-                                                                type="checkbox" v-model="script.promptOnly"
-                                                                class="checkbox checkbox-xs" /><span
-                                                                class="text-xs">仅 Prompt</span></label>
+                                                <div class="flex flex-col gap-3 bg-base-200/30 p-3 rounded-lg mt-2">
+                                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                                        <label class="label py-0 cursor-pointer gap-2 justify-start">
+                                                            <input type="checkbox" :value="1" v-model="script.placement"
+                                                                class="checkbox checkbox-xs checkbox-primary" />
+                                                            <span class="label-text text-xs font-bold text-base-content/50">用户消息</span>
+                                                        </label>
+                                                        <label class="label py-0 cursor-pointer gap-2 justify-start">
+                                                            <input type="checkbox" :value="2" v-model="script.placement"
+                                                                class="checkbox checkbox-xs checkbox-primary" />
+                                                            <span class="label-text text-xs font-bold text-base-content/50">AI消息</span>
+                                                        </label>
+                                                        <label class="label py-0 cursor-pointer gap-2 justify-start">
+                                                            <input type="checkbox" v-model="script.markdownOnly"
+                                                                @change="$event.target.checked && (script.promptOnly = false)"
+                                                                class="checkbox checkbox-xs checkbox-primary" />
+                                                            <span class="label-text text-xs font-bold text-base-content/50">仅用户可见</span>
+                                                        </label>
+                                                        <label class="label py-0 cursor-pointer gap-2 justify-start">
+                                                            <input type="checkbox" v-model="script.promptOnly"
+                                                                @change="$event.target.checked && (script.markdownOnly = false)"
+                                                                class="checkbox checkbox-xs checkbox-primary" />
+                                                            <span class="label-text text-xs font-bold text-base-content/50">仅AI可见</span>
+                                                        </label>
                                                     </div>
-                                                    <div class="flex gap-3 items-center">
+                                                    <div class="flex gap-3 items-center pt-2">
                                                         <div class="join shadow-sm">
                                                             <span
                                                                 class="join-item btn btn-xs btn-static bg-base-200 border-base-300 font-normal text-xs">深度</span>
@@ -1314,12 +1327,10 @@
                                             <div v-if="uiTemplateGenerationMode === 'diff'" class="form-control">
                                                 <label class="label py-1"><span
                                                         class="label-text text-xs font-bold text-base-content/50 uppercase">选择要改造的模板</span></label>
-                                                <select v-model.number="uiTemplateTargetIndex"
-                                                    class="select select-bordered select-sm bg-base-200/30">
-                                                    <option :value="-1" disabled>请选择模板</option>
-                                                    <option v-for="(template, index) in uiTemplates" :key="template.id || index"
-                                                        :value="index">{{ index + 1 }}. {{ template.name || '未命名模板' }}</option>
-                                                </select>
+                                                <custom-select v-model="uiTemplateTargetIndex" :options="uiTemplateTargetOptions"
+                                                    button-class="h-10 min-h-10 rounded-xl border-base-300 bg-base-200/30 text-sm text-base-content"
+                                                    menu-class="text-sm">
+                                                </custom-select>
                                             </div>
                                             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-1">
                                                 <div class="text-xs text-base-content/40 font-medium">
@@ -1366,7 +1377,7 @@
                                         <div class="collapse-title font-medium flex items-center gap-3 py-4">
                                             <span class="badge badge-neutral font-mono">#{{ index + 1 }}</span>
                                             <span class="truncate text-base-content/80">{{ template.name || '未命名模板' }}</span>
-                                            <span class="badge badge-warning badge-outline ml-auto hidden md:inline-flex">绑定角色</span>
+                                            <span class="badge badge-warning badge-outline ml-auto hidden md:inline-flex">绑定</span>
                                         </div>
                                         <div class="collapse-content">
                                             <div class="flex flex-col gap-3 pt-2 pb-4">
@@ -1381,11 +1392,10 @@
                                                     <div class="form-control">
                                                         <label class="label py-1"><span
                                                                 class="label-text text-xs font-bold text-base-content/50 uppercase">插入位置</span></label>
-                                                        <select v-model="template.placement"
-                                                            class="select select-bordered select-sm bg-base-200/30">
-                                                            <option value="bottom">底部</option>
-                                                            <option value="top">顶部</option>
-                                                        </select>
+                                                        <custom-select v-model="template.placement" :options="uiTemplatePlacementOptions"
+                                                            button-class="h-10 min-h-10 rounded-xl border-base-300 bg-base-200/30 text-sm text-base-content"
+                                                            menu-class="text-sm">
+                                                        </custom-select>
                                                     </div>
                                                     <div class="form-control">
                                                         <label class="label py-1"><span
@@ -1577,6 +1587,19 @@
                             </svg>
                             <span class="truncate">角色列表</span>
                         </div>
+                        <label
+                            class="btn btn-sm btn-outline btn-circle border-base-300 hover:border-primary hover:bg-primary hover:text-white cursor-pointer shrink-0"
+                            title="导入角色卡">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                                viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="7 10 12 15 17 10" />
+                                <line x1="12" x2="12" y1="15" y2="3" />
+                            </svg>
+                            <input type="file" class="hidden" accept=".png,.json,application/json,image/png"
+                                @change="importCharacterCard" />
+                        </label>
                         <button @click="createNewCharacter"
                             class="btn btn-sm btn-primary btn-circle text-white shadow-lg shadow-primary/30 shrink-0">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
@@ -1686,6 +1709,9 @@
         const { createApp, ref, reactive, computed, watch, onMounted, nextTick } = Vue;
 
         createApp({
+            components: {
+                CustomSelect: window.RPHubCustomSelect
+            },
             setup() {
                 // Utility: Debounce
                 const debounce = (fn, delay) => {
@@ -1706,6 +1732,38 @@
                         return v.toString(16);
                     });
                 };
+
+                const cardUtils = new Proxy({}, {
+                    get(_, key) {
+                        const utils = window.RPHubCardUtils;
+                        if (!utils) throw new Error('角色卡工具还没加载完成，请稍后再试');
+                        const value = utils[key];
+                        if (typeof key === 'string' && value === undefined) {
+                            throw new Error(`角色卡工具缺少 ${key}，请刷新后重试`);
+                        }
+                        return value;
+                    }
+                });
+                const waitForCardUtils = (timeoutMs = 8000) => new Promise((resolve, reject) => {
+                    if (window.RPHubCardUtils) {
+                        resolve(window.RPHubCardUtils);
+                        return;
+                    }
+
+                    const startedAt = Date.now();
+                    const timer = setInterval(() => {
+                        if (window.RPHubCardUtils) {
+                            clearInterval(timer);
+                            resolve(window.RPHubCardUtils);
+                            return;
+                        }
+
+                        if (Date.now() - startedAt >= timeoutMs) {
+                            clearInterval(timer);
+                            reject(new Error('角色卡工具加载超时，请刷新后重试'));
+                        }
+                    }, 50);
+                });
 
                 onMounted(() => {
                     // 模拟主站的 triggerSlash 功能，用于预览调试
@@ -1834,12 +1892,36 @@
                     // Force inform sync if needed (though watch handles it)
                 };
 
+                const getActiveModelTypeFromMainSettings = (mainSettings) => {
+                    const selectedModel = String(mainSettings?.model || '');
+                    if (!selectedModel) return null;
+                    if (selectedModel === mainSettings.fastModel) return 'fast';
+                    if (selectedModel === mainSettings.balancedModel) return 'balanced';
+                    if (selectedModel === mainSettings.qualityModel) return 'quality';
+                    return null;
+                };
+
+                const fontFamilyCssMap = {
+                    modern: '"Inter", "HarmonyOS Sans SC", "MiSans", "OPPO Sans", "Alibaba PuHuiTi 3.0", "Alibaba PuHuiTi", "Noto Sans SC", "Source Han Sans SC", "Microsoft YaHei UI", "Segoe UI", Arial, sans-serif',
+                    serif: '"Lora", "Noto Serif SC", "Source Han Serif SC", "Source Han Serif CN", STSong, SimSun, Georgia, Cambria, "Times New Roman", Times, serif',
+                    system: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", Arial, sans-serif'
+                };
+                const normalizeFontFamily = (value) => ['modern', 'serif', 'system'].includes(value) ? value : 'modern';
+                const getWorkshopFontCss = (value = document.documentElement.dataset.appFont) => fontFamilyCssMap[normalizeFontFamily(value)];
+                const applyFontFamily = (value) => {
+                    document.documentElement.dataset.appFont = normalizeFontFamily(value);
+                };
+                applyFontFamily('modern');
+                const IMAGE_GEN_BASE_URL = 'https://nai.sta1n.cn';
+
                 // Main Settings Sync Listener
                 const setupSyncListener = () => {
                     window.addEventListener('message', (event) => {
                         const { type, settings: mainSettings } = event.data;
                         if (type === 'SYNC_SETTINGS' && mainSettings) {
-                            console.log('%c[Settings Sync Received]', 'color: #10b981; font-weight: bold;', mainSettings);
+                            console.log('%c[Settings Sync Received]', 'color: #10b981; font-weight: bold;');
+
+                            applyFontFamily(mainSettings.fontFamily);
 
                             // Sync API
                             if (mainSettings.apiUrl) api.url = mainSettings.apiUrl;
@@ -1847,13 +1929,15 @@
 
                             // Sync Image Gen
                             // Always sync key even if empty to ensure reset
-                            options.imageGenKey = mainSettings.imageGenKey || '';
+                            options.imageGenKey = mainSettings.imageGenKey;
 
                             // Map imageStyle to avatarStyle (vertical -> default, r18 -> hentai)
                             if (mainSettings.imageStyle === 'r18') {
                                 options.avatarStyle = 'hentai';
                             } else if (mainSettings.imageStyle === 'vertical') {
                                 options.avatarStyle = 'default';
+                            } else if (mainSettings.imageStyle === 'lolita25d') {
+                                options.avatarStyle = 'lolita25d';
                             }
 
                             // Sync Models
@@ -1861,9 +1945,11 @@
                             if (mainSettings.balancedModel) options.customModels.balanced = mainSettings.balancedModel;
                             if (mainSettings.fastModel) options.customModels.fast = mainSettings.fastModel;
                             uiTemplateModel.value = mainSettings.uiTemplateModel || mainSettings.memoryModel || mainSettings.fastModel || '';
+                            const syncedModelType = getActiveModelTypeFromMainSettings(mainSettings);
+                            if (syncedModelType) activeModelType.value = syncedModelType;
 
                             // Update current active api.model
-                            api.model = options.customModels[activeModelType.value] || api.model;
+                            api.model = options.customModels[activeModelType.value] || mainSettings.model || api.model;
                         }
                     });
 
@@ -1957,7 +2043,11 @@
                     { value: 'after_char', label: '角色设定后' },
                     { value: 'at_depth', label: '按深度插入' },
                     { value: 'user_top', label: '用户消息顶部' },
-                    { value: 'assistant_top', label: 'AI消息顶部' }
+                    { value: 'assistant_top', label: '助手消息顶部' }
+                ];
+                const uiTemplatePlacementOptions = [
+                    { value: 'bottom', label: '底部' },
+                    { value: 'top', label: '顶部' }
                 ];
 
                 const getValue = (source, keys, fallback) => {
@@ -2029,7 +2119,6 @@
                     const enabled = merged.enabled !== undefined
                         ? toBoolean(merged.enabled, true)
                         : !toBoolean(getValue(merged, ['disable', 'disabled'], false), false);
-
                     return {
                         comment: getValue(merged, ['comment', 'name'], ''),
                         name: getValue(merged, ['name', 'comment'], ''),
@@ -2039,17 +2128,12 @@
                         enabled,
                         constant: toBoolean(getValue(merged, ['constant'], false), false),
                         useRegex: toBoolean(getValue(merged, ['useRegex', 'use_regex'], false), false),
-                        matchWholeWords: toBoolean(getValue(merged, ['matchWholeWords', 'match_whole_words'], true), true),
-                        caseSensitive: toBoolean(getValue(merged, ['caseSensitive', 'case_sensitive'], false), false),
                         position: normalizeWorldPosition(getValue(merged, ['position'], 'at_depth')),
                         order: toNumber(getValue(merged, ['order', 'insertion_order'], 100), 100),
                         depth: toNumber(getValue(merged, ['depth'], 4), 4),
                         scanDepth: toNumber(getValue(merged, ['scanDepth', 'scan_depth'], 2), 2),
                         probability: toNumber(getValue(merged, ['probability'], 100), 100),
-                        useProbability: toBoolean(getValue(merged, ['useProbability', 'use_probability'], true), true),
-                        excludeRecursion: toBoolean(getValue(merged, ['excludeRecursion', 'exclude_recursion'], false), false),
-                        preventRecursion: toBoolean(getValue(merged, ['preventRecursion', 'prevent_recursion'], false), false),
-                        delayUntilRecursion: toBoolean(getValue(merged, ['delayUntilRecursion', 'delay_until_recursion'], false), false)
+                        useProbability: toBoolean(getValue(merged, ['useProbability', 'use_probability'], true), true)
                     };
                 };
 
@@ -2074,6 +2158,8 @@
                     const flags = getValue(script, ['flags', 'regexFlags'], parsed.flags || 'g') || parsed.flags || 'g';
                     let placement = Array.isArray(script.placement) ? script.placement.map(Number).filter(v => v === 1 || v === 2) : [1, 2];
                     if (placement.length === 0) placement = [2];
+                    const markdownOnly = toBoolean(script.markdownOnly, false);
+                    const promptOnly = markdownOnly ? false : toBoolean(script.promptOnly, false);
 
                     return {
                         name: getValue(script, ['name', 'scriptName'], '新建脚本'),
@@ -2082,8 +2168,8 @@
                         replacement: script.hasOwnProperty('replacement') ? script.replacement : getValue(script, ['replaceString'], ''),
                         placement,
                         enabled: script.enabled !== undefined ? toBoolean(script.enabled, true) : !toBoolean(script.disabled, false),
-                        markdownOnly: toBoolean(script.markdownOnly, false),
-                        promptOnly: toBoolean(script.promptOnly, false),
+                        markdownOnly,
+                        promptOnly,
                         minDepth: toNumber(script.minDepth, null),
                         maxDepth: toNumber(script.maxDepth, null)
                     };
@@ -2130,19 +2216,7 @@
 
                 const toUiTemplateExportEntry = (template) => {
                     const normalized = normalizeUiTemplate(template);
-                    return {
-                        id: normalized.id,
-                        name: normalized.name,
-                        enabled: normalized.enabled,
-                        scope: 'character',
-                        order: normalized.order,
-                        placement: normalized.placement,
-                        htmlTemplate: normalized.htmlTemplate,
-                        initialVariableState: cloneUiObject(normalized.initialVariableState),
-                        variableState: cloneUiObject(normalized.variableState),
-                        variableSchema: normalized.variableSchema,
-                        updateMode: normalized.updateMode
-                    };
+                    return cardUtils.toUiTemplateExportEntry(normalized, { scope: 'character' });
                 };
 
                 const sanitizeUiTemplateImportEntry = (template = {}) => {
@@ -2151,42 +2225,14 @@
                 };
 
                 const toRegexExportEntry = (script) => {
-                    const normalized = normalizeRegexScript(script);
-                    return {
-                        name: normalized.name,
-                        regex: normalized.regex,
-                        flags: normalized.flags,
-                        replacement: normalized.replacement,
-                        placement: normalized.placement,
-                        markdownOnly: normalized.markdownOnly,
-                        promptOnly: normalized.promptOnly,
-                        minDepth: normalized.minDepth,
-                        maxDepth: normalized.maxDepth,
-                        disabled: !normalized.enabled
-                    };
+                    const normalized = { ...script, ...normalizeRegexScript(script) };
+                    delete normalized.disabled;
+                    return cardUtils.toRegexExportEntry(normalized);
                 };
 
                 const toWorldInfoExportEntry = (entry, index = 0) => {
                     const normalized = normalizeWorldInfoEntry(entry);
-                    return {
-                        keys: normalized.keys,
-                        comment: normalized.comment || normalized.name || '',
-                        content: normalized.content,
-                        enabled: normalized.enabled,
-                        constant: normalized.constant,
-                        useRegex: normalized.useRegex,
-                        caseSensitive: normalized.caseSensitive,
-                        matchWholeWords: normalized.matchWholeWords,
-                        order: normalized.order,
-                        position: normalized.position,
-                        depth: normalized.depth,
-                        scanDepth: normalized.scanDepth,
-                        probability: normalized.probability,
-                        useProbability: normalized.useProbability,
-                        excludeRecursion: normalized.excludeRecursion,
-                        preventRecursion: normalized.preventRecursion,
-                        delayUntilRecursion: normalized.delayUntilRecursion
-                    };
+                    return cardUtils.toWorldInfoExportEntry(normalized);
                 };
 
                 const normalizeCharacterShape = (char) => {
@@ -2197,7 +2243,6 @@
                     const rawTemplates = Array.isArray(char.uiTemplates) ? char.uiTemplates : (Array.isArray(char.ui_templates) ? char.ui_templates : extensionTemplates);
                     char.uiTemplates = Array.isArray(rawTemplates) ? rawTemplates.map(template => normalizeUiTemplate(sanitizeUiTemplateImportEntry(template))) : [];
                     if (!Array.isArray(char.tags)) char.tags = [];
-                    if (!char.depth_prompt) char.depth_prompt = { prompt: '', depth: 4, role: 'system' };
                     return char;
                 };
 
@@ -2216,15 +2261,112 @@
                     tags: [],
                     avatar: null,
                     avatar_prompt: '',
-                    depth_prompt: {
-                        prompt: '',
-                        depth: 4,
-                        role: 'system'
-                    },
                     worldInfo: [],
                     regexScripts: [],
                     uiTemplates: []
                 });
+
+                const getArrayValues = (value) => {
+                    if (Array.isArray(value)) return value;
+                    if (value && typeof value === 'object') return Object.values(value);
+                    return [];
+                };
+
+                const buildCharacterFromImport = (rawData, avatarUrl = null) => {
+                    const root = rawData || {};
+                    const data = root.data && typeof root.data === 'object' ? root.data : root;
+                    const rootExtensions = root.extensions && typeof root.extensions === 'object' ? root.extensions : {};
+                    const dataExtensions = data.extensions && typeof data.extensions === 'object' ? data.extensions : {};
+                    const characterBook = data.character_book || root.character_book || data.characterBook || root.characterBook;
+                    const regexSource = dataExtensions.regex_scripts
+                        || rootExtensions.regex_scripts
+                        || data.regexScripts
+                        || data.regex_scripts
+                        || root.regexScripts
+                        || root.regex_scripts
+                        || [];
+                    const uiTemplateSource = data.uiTemplates
+                        || data.ui_templates
+                        || root.uiTemplates
+                        || root.ui_templates
+                        || dataExtensions.rp_hub_ui_templates
+                        || dataExtensions.ui_templates
+                        || rootExtensions.rp_hub_ui_templates
+                        || rootExtensions.ui_templates
+                        || [];
+                    const worldEntries = characterBook
+                        ? getArrayValues(characterBook.entries || characterBook)
+                        : getArrayValues(data.worldInfo || data.world_info || root.worldInfo || root.world_info);
+
+                    return normalizeCharacterShape({
+                        id: generateUUID(),
+                        name: data.name || data.char_name || '未命名角色',
+                        description: data.description || data.char_persona || '',
+                        personality: data.personality || '',
+                        scenario: data.scenario || '',
+                        first_mes: data.first_mes || data.first_message || '',
+                        mes_example: data.mes_example || '',
+                        creator_notes: data.creator_notes || data.creatorcomment || data.creator_comment || '',
+                        system_prompt: data.system_prompt || '',
+                        post_history_instructions: data.post_history_instructions || '',
+                        tags: Array.isArray(data.tags) ? data.tags : [],
+                        avatar: avatarUrl || data.avatar || data.avatar_url || root.avatar || null,
+                        avatar_prompt: data.avatar_prompt || dataExtensions.avatar_prompt || root.avatar_prompt || '',
+                        worldInfo: worldEntries,
+                        regexScripts: getArrayValues(regexSource),
+                        uiTemplates: getArrayValues(uiTemplateSource)
+                    });
+                };
+
+                const applyImportedCharacter = (rawData, avatarUrl = null) => {
+                    const importedCharacter = buildCharacterFromImport(rawData, avatarUrl);
+                    characters.value.push(importedCharacter);
+                    currentCharacterIndex.value = characters.value.length - 1;
+                    activeTab.value = 'basic';
+                    document.getElementById('my-drawer').checked = false;
+                    showToast(`已导入角色卡：${importedCharacter.name || '未命名角色'}`, 'success');
+                };
+
+                const importCharacterCard = (event) => {
+                    const file = event.target.files?.[0];
+                    if (!file) return;
+                    event.target.value = '';
+
+                    if (file.type === 'application/json' || file.name.toLowerCase().endsWith('.json')) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            try {
+                                applyImportedCharacter(JSON.parse(e.target.result));
+                            } catch (err) {
+                                showToast('JSON 角色卡解析失败', 'error');
+                                console.error('JSON import error:', err);
+                            }
+                        };
+                        reader.readAsText(file);
+                        return;
+                    }
+
+                    if (file.type === 'image/png' || file.name.toLowerCase().endsWith('.png')) {
+                        const reader = new FileReader();
+                        reader.onload = async (e) => {
+                            try {
+                                const buffer = e.target.result;
+                                const utils = await waitForCardUtils();
+                                const { data } = utils.parsePngCharacterData(buffer);
+                                const blob = new Blob([buffer], { type: 'image/png' });
+                                const avatarUrl = await utils.blobToDataUrl(blob);
+                                applyImportedCharacter(data, avatarUrl);
+                            } catch (err) {
+                                showToast('PNG 角色卡解析失败', 'error');
+                                console.error('PNG import error:', err);
+                            }
+                        };
+                        reader.readAsArrayBuffer(file);
+                        return;
+                    }
+
+                    showToast('只支持导入 .json 或 .png 角色卡', 'error');
+                };
 
 
                 // Storage Logic (IndexedDB via localforage)
@@ -2234,10 +2376,10 @@
                 // Initialize localforage
                 localforage.config({ name: 'AICharGen', storeName: 'characters' });
 
-                // Load Data with Migration
+                // Load Data
                 const loadData = async () => {
                     try {
-                        // 1. Try to load from IndexedDB
+                        // Load from IndexedDB
                         const saved = await localforage.getItem('ai_chargen_characters');
                         if (saved) {
                             const parsed = JSON.parse(saved);
@@ -2247,27 +2389,6 @@
                                 normalizeCharacterShape(c);
                             });
                             characters.value = parsed;
-                        } else {
-
-                            // 2. Migration: Try to load from localStorage
-                            const lsSaved = localStorage.getItem('ai_chargen_characters');
-                            if (lsSaved) {
-                                console.log('Migrating data from localStorage to IndexedDB...');
-                                try {
-                                    const parsed = JSON.parse(lsSaved);
-                                    parsed.forEach(c => {
-                                        if (!c.id) c.id = generateUUID();
-                                        normalizeCharacterShape(c);
-                                    });
-                                    characters.value = parsed;
-                                    // Save to IndexedDB
-                                    await localforage.setItem('ai_chargen_characters', lsSaved);
-                                    showToast('已成功迁移数据至大容量存储', 'success');
-                                    // Optional: Clear old localStorage to free up space, but keeping for safety for now
-                                } catch (e) {
-                                    console.error('Migration parsing error', e);
-                                }
-                            }
                         }
 
                         // Restore active index
@@ -2325,13 +2446,84 @@
                 const worldInfo = computed(() => currentCharacter.value.worldInfo);
                 const regexScripts = computed(() => currentCharacter.value.regexScripts);
                 const uiTemplates = computed(() => currentCharacter.value.uiTemplates);
+                const uiTemplateTargetOptions = computed(() => [
+                    { value: -1, label: '请选择模板', disabled: true },
+                    ...uiTemplates.value.map((template, index) => ({
+                        value: index,
+                        label: `${index + 1}. ${template.name || '未命名模板'}`
+                    }))
+                ]);
+
+                const readJsonFile = (event, onData, errorMessage = '导入失败') => {
+                    const file = event.target.files?.[0];
+                    if (!file) return;
+                    event.target.value = '';
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            onData(JSON.parse(e.target.result));
+                        } catch (err) {
+                            showToast(errorMessage, 'error');
+                            console.error(errorMessage, err);
+                        }
+                    };
+                    reader.readAsText(file);
+                };
+
+                const extractWorldInfoEntries = (payload) => {
+                    if (Array.isArray(payload)) return payload;
+                    const data = payload?.data || payload || {};
+                    const book = data.character_book || payload?.character_book || data.characterBook || payload?.characterBook;
+                    if (book) return getArrayValues(book.entries || book);
+                    return getArrayValues(data.worldInfo || data.world_info || payload?.worldInfo || payload?.world_info || payload?.entries);
+                };
+
+                const extractRegexEntries = (payload) => {
+                    if (Array.isArray(payload)) return payload;
+                    const data = payload?.data || payload || {};
+                    return getArrayValues(
+                        data.extensions?.regex_scripts
+                        || payload?.extensions?.regex_scripts
+                        || data.regexScripts
+                        || data.regex_scripts
+                        || payload?.regexScripts
+                        || payload?.regex_scripts
+                        || payload?.scripts
+                    );
+                };
+
+                const importWorldInfoFile = (event) => {
+                    readJsonFile(event, (payload) => {
+                        const entries = extractWorldInfoEntries(payload).map(normalizeWorldInfoEntry);
+                        if (!entries.length) throw new Error('没有找到世界书条目');
+                        currentCharacter.value.worldInfo.push(...entries);
+                        activeTab.value = 'world';
+                        showToast(`已导入 ${entries.length} 条世界书`, 'success');
+                    }, '世界书导入失败');
+                };
+
+                const importRegexFile = (event) => {
+                    readJsonFile(event, (payload) => {
+                        const scripts = extractRegexEntries(payload).map(normalizeRegexScript);
+                        if (!scripts.length) throw new Error('没有找到正则脚本');
+                        currentCharacter.value.regexScripts.push(...scripts);
+                        activeTab.value = 'regex';
+                        showToast(`已导入 ${scripts.length} 个正则脚本`, 'success');
+                    }, '正则导入失败');
+                };
 
                 const applyRegex = (text, scripts, options = {}) => {
                     if (!text) return '';
                     let processed = text;
 
                     const { isDisplay = true, isPrompt = false, role = 'assistant', depth = 0 } = options;
-                    for (const rawScript of scripts) {
+                    const orderedScripts = [...scripts].sort((a, b) => {
+                        const aIsImageGen = (a.name || a.scriptName) === 'NAI画图正则';
+                        const bIsImageGen = (b.name || b.scriptName) === 'NAI画图正则';
+                        return aIsImageGen === bIsImageGen ? 0 : (aIsImageGen ? 1 : -1);
+                    });
+                    for (const rawScript of orderedScripts) {
                         const script = normalizeRegexScript(rawScript);
                         if (!script.enabled) continue;
                         if (role === 'user' && !script.placement.includes(1)) continue;
@@ -2420,7 +2612,7 @@
                             -webkit-overflow-scrolling: touch !important;
                         }
                         body {
-                            font-family: 'PingFang SC', 'PingFang TC', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+                            font-family: ${getWorkshopFontCss()} !important;
                             -webkit-font-smoothing: antialiased;
                             -moz-osx-font-smoothing: grayscale;
                             /* 确保 Body 可滚动且有高度 */
@@ -2790,7 +2982,7 @@
                     return renderUiTemplateString(normalized.htmlTemplate || '', vars);
                 };
 
-                const wrapUiTemplatePreview = (html) => `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>html,body{margin:0;min-height:100%;background:#fff;font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;}body{padding:16px;box-sizing:border-box;}*{box-sizing:border-box;}</style></head><body>${html || ''}</body></html>`;
+                const wrapUiTemplatePreview = (html) => `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>html,body{margin:0;min-height:100%;background:#fff;font-family:${getWorkshopFontCss()};}body{padding:16px;box-sizing:border-box;}*{box-sizing:border-box;}</style></head><body>${html || ''}</body></html>`;
 
                 const openUiTemplatePreview = (template) => {
                     previewOriginalOverride.value = null;
@@ -2864,6 +3056,47 @@
                         variableSchema: stripCodeFence(pick('variableschema', '变量说明', 'schema'))
                     };
                 };
+
+                const normalizeNativeReasoningPart = (value) => {
+                    if (value === undefined || value === null) return '';
+                    if (typeof value === 'string') return value;
+                    if (Array.isArray(value)) return value.map(normalizeNativeReasoningPart).join('');
+                    if (typeof value === 'object') {
+                        const keys = ['text', 'content', 'summary', 'reasoning', 'reasoning_content', 'thinking', 'thought', 'value'];
+                        for (const key of keys) {
+                            const text = normalizeNativeReasoningPart(value[key]);
+                            if (text) return text;
+                        }
+                        return '';
+                    }
+                    return String(value);
+                };
+
+                const extractNativeReasoning = (source = {}) => {
+                    if (!source || typeof source !== 'object') return '';
+                    const directKeys = ['reasoning_content', 'reasoning', 'thinking', 'thinking_content', 'thought', 'thoughts', 'reasoning_text'];
+                    for (const key of directKeys) {
+                        const text = normalizeNativeReasoningPart(source[key]);
+                        if (text) return text;
+                    }
+                    if (Array.isArray(source.reasoning_details)) {
+                        const text = normalizeNativeReasoningPart(source.reasoning_details);
+                        if (text) return text;
+                    }
+                    if (Array.isArray(source.content)) {
+                        return source.content.map(part => {
+                            const type = String(part?.type || '').toLowerCase();
+                            if (type.includes('reason') || type.includes('thinking') || type.includes('thought')) {
+                                return normalizeNativeReasoningPart(part);
+                            }
+                            return '';
+                        }).join('');
+                    }
+                    return '';
+                };
+
+                const hasInlineThinking = (text = '') => /<\s*(think|cot)\b/i.test(String(text || ''));
+                const stripInlineThinking = (text = '') => String(text || '').replace(/<\s*(think|cot)\b[^>]*>[\s\S]*?(?:<\s*\/\s*\1\s*>|<\s*\1\s*>|$)/gi, '').trimStart();
 
                 const buildUiTemplateSystemPrompt = () => {
                     const char = currentCharacter.value;
@@ -3062,7 +3295,7 @@ ${uiTemplatePrompt.value.trim() || '根据当前角色自动设计一个状态�
                     try {
                         const baseUrl = api.url.replace(/\/+$/, '');
                         const apiUrl = baseUrl.endsWith('/v1') ? baseUrl : `${baseUrl}/v1`;
-                        const model = uiTemplateModel.value || options.customModels.fast || api.model;
+                        const model = options.customModels[activeModelType.value] || api.model || uiTemplateModel.value;
                         const response = await fetch(`${apiUrl}/chat/completions`, {
                             method: 'POST',
                             headers: {
@@ -3195,7 +3428,7 @@ ${uiTemplatePrompt.value.trim() || '根据当前角色自动设计一个状态�
                     showToast('开始修改...', 'info');
                     isGenerating.value = true;
                     generationProgress.value = 0;
-                    generationStatus.value = '正在分析修改方案...';
+                    generationStatus.value = '正在等待API响应...';
                     abortController.value = new AbortController();
 
                     // Prepare Context
@@ -3255,7 +3488,8 @@ ${uiTemplatePrompt.value.trim() || '根据当前角色自动设计一个状态�
        - 必须生成一套“阅读卡片式正文美化”正则，而不是只做简单改色。效果类型参考：柔和信纸、档案页、手帐便签、病历/报告、暗黑契约、科幻终端、旧日书页、雨夜短信、童话绘本等。请根据当前角色的气质、时代、职业、关系张力和世界观自动选择主题；禁止固定复刻某一种金色样式。
        - 美化应服务于阅读体验：正文像一个完整的沉浸式面板，心理活动像独立的内心便签或引用卡，对话像精致引语，角色名、{{user}}、关键物件像柔和标签。不要生成顶部状态栏、下载按钮、关闭按钮等应用外壳控件。
        - 所有 replacement 必须是单行 HTML 字符串，优先使用内联 CSS；禁止远程图片、外链字体、script、position: fixed、遮挡正文的浮层。所有双引号必须在 JSON 字符串中正确转义，或在 HTML 属性中改用单引号。
-       - 每个脚本建议：enabled=true，markdownOnly=true，promptOnly=false，placement=[2]，flags="g"。
+       - 每个脚本建议：enabled=true，markdownOnly=true（仅用户可见），promptOnly=false，placement=[2]，flags="g"。
+       - markdownOnly 与 promptOnly 互斥，绝不能同时为 true。
        - 脚本组合必须至少包含：
          1. "正文阅读面板"：数组第一位，regex 字段写 \`^([\\s\\S]+)$\`，把整段正文包裹进一个响应式 \`div\`。容器需包含主题背景、细边框/侧边强调线、柔和阴影、充足 padding、合理行高、\`white-space: pre-wrap;\`、\`overflow-wrap: anywhere;\`、\`max-width: 100%;\`、\`margin: 0;\`，且不能依赖图片背景。
          2. "心理独白卡"：匹配 \`（([^）]*?)）\`，生成块级便签/引用样式，例如左侧竖线、淡背景、轻微内阴影、小图形点缀或 quote 标记，呈现内敛的心理独白感。
@@ -3265,6 +3499,7 @@ ${uiTemplatePrompt.value.trim() || '根据当前角色自动设计一个状态�
     
     **世界书 (World Info) 生成规范**：
     - **样式规范与心理对话格式（必填 & 常驻）**：必须包含一条名为 "样式规范" 的常驻条目（Position=after_char）。内容需明确指示：“在回复中必须包含丰富细腻的心理活动或心理对话，且心理活动必须使用圆括号（）包裹，说出口的对话请使用『』包裹。请严格遵守此格式输出，以便系统进行高亮渲染。”
+    - constant=true 表示不依赖关键词触发，启用后始终插入；useProbability 只影响非 常驻 条目的关键词/正则触发。
     - **重要提示**：在 JSON 内容中，如果涉及到双引号（"），**必须**使用反斜杠进行转义（如：\\"），否则会导致系统解析失败。
     - **世界观设定**：必须包含一条名为“世界观”的详细条目（内容最少1000字），必须详尽详细描述世界背景、社会结构等，为 AI 的自由发挥提供坚实基础。
     - **角色设定**：必须包含名为“XX的设定”的详细条目，详细描述某个对应角色具体设定，为 AI 的自由发挥提供坚实基础，多个角色可拥有多世界书条目。
@@ -3292,6 +3527,7 @@ ${uiTemplatePrompt.value.trim() || '根据当前角色自动设计一个状态�
 
                         const baseUrl = api.url.replace(/\/+$/, '');
                         const apiUrl = baseUrl.endsWith('/v1') ? baseUrl : `${baseUrl}/v1`;
+                        generationStatus.value = '正在等待API响应...';
 
                         console.log('%c[Workshop AI Request]', 'color: #3b82f6; font-weight: bold;', { url: apiUrl, model: api.model });
                         const response = await fetch(`${apiUrl}/chat/completions`, {
@@ -3317,22 +3553,49 @@ ${uiTemplatePrompt.value.trim() || '根据当前角色自动设计一个状态�
                         const reader = response.body.getReader();
                         const decoder = new TextDecoder();
                         let fullContent = '';
+                        let rawContentBuffer = '';
+                        let sseBuffer = '';
+                        let receivedContent = false;
 
                         while (true) {
                             const { done, value } = await reader.read();
                             if (done) break;
 
-                            const chunk = decoder.decode(value, { stream: true });
-                            const lines = chunk.split('\n');
+                            sseBuffer += decoder.decode(value, { stream: true });
+                            const lines = sseBuffer.split('\n');
+                            sseBuffer = lines.pop() || '';
                             for (const line of lines) {
-                                if (line.startsWith('data: ')) {
-                                    const data = line.slice(6);
+                                const trimmedLine = line.trim();
+                                if (trimmedLine.startsWith('data:')) {
+                                    const data = trimmedLine.replace(/^data:\s*/, '');
                                     if (data === '[DONE]') continue;
                                     try {
                                         const json = JSON.parse(data);
-                                        const content = json.choices[0]?.delta?.content || '';
+                                        const choice = json.choices?.[0];
+                                        const delta = choice?.delta || choice?.message || {};
+                                        const reasoning = extractNativeReasoning(delta) || extractNativeReasoning(choice);
+                                        if (reasoning) {
+                                            if (!receivedContent) {
+                                                generationStatus.value = '正在思考...';
+                                            }
+                                        }
+
+                                        const content = delta.content || '';
                                         if (content) {
-                                            fullContent += content;
+                                            rawContentBuffer += content;
+                                            if (hasInlineThinking(rawContentBuffer) && !receivedContent) {
+                                                generationStatus.value = '正在思考...';
+                                            }
+
+                                            const visibleContent = stripInlineThinking(rawContentBuffer);
+                                            if (hasInlineThinking(rawContentBuffer) && !visibleContent.trim()) {
+                                                generationStatus.value = '正在思考...';
+                                                continue;
+                                            }
+
+                                            if (!visibleContent) continue;
+                                            receivedContent = true;
+                                            fullContent = visibleContent;
                                             // Update progress simply to show activity
                                             generationProgress.value = Math.min(99, generationProgress.value + 1);
 
@@ -3411,7 +3674,7 @@ ${uiTemplatePrompt.value.trim() || '根据当前角色自动设计一个状态�
 
                                                     // 如果还是没匹配到，但有内容，显示通用提示
                                                     if (!matched && cleanSample.length > 5) {
-                                                        generationStatus.value = '正在分析变更内容...';
+                                                        generationStatus.value = '正在整理变更内容...';
                                                     }
                                                 }
                                             }
@@ -3666,9 +3929,9 @@ ${uiTemplatePrompt.value.trim() || '根据当前角色自动设计一个状态�
                 const isPlainJsonObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 
                 const looseJsonObjectKeys = [
-                    'keys', 'comment', 'name', 'content', 'enabled', 'constant', 'useRegex', 'caseSensitive',
-                    'matchWholeWords', 'order', 'position', 'depth', 'scanDepth', 'probability', 'useProbability',
-                    'excludeRecursion', 'preventRecursion', 'delayUntilRecursion', 'regex', 'flags', 'replacement',
+                    'keys', 'comment', 'name', 'content', 'enabled', 'constant', 'useRegex',
+                    'order', 'position', 'depth', 'scanDepth', 'probability', 'useProbability',
+                    'regex', 'flags', 'replacement',
                     'placement', 'markdownOnly', 'promptOnly', 'minDepth', 'maxDepth', 'disabled', 'id', 'scope',
                     'htmlTemplate', 'initialVariableState', 'variableState', 'variableSchema', 'updateMode'
                 ];
@@ -4043,9 +4306,9 @@ ${uiTemplatePrompt.value.trim() || '根据当前角色自动设计一个状态�
                         creator_notes: '作者注释',
                         system_prompt: '系统提示',
                         post_history_instructions: '后续指令',
-                        worldInfo: '世界书 (JSON)',
-                        regexScripts: '正则脚本 (JSON)',
-                        uiTemplates: 'UI模板 (JSON)'
+                        worldInfo: '世界书',
+                        regexScripts: '正则脚本',
+                        uiTemplates: 'UI模板'
                     };
                     return map[key] || key;
                 };
@@ -4186,9 +4449,9 @@ ${uiTemplatePrompt.value.trim() || '根据当前角色自动设计一个状态�
                     cacheAvatar(e.target);
                 };
 
-                const onAvatarError = (e) => {
+                const onAvatarError = () => {
                     isAvatarLoading.value = false;
-                    console.error('Avatar load error:', e);
+                    console.error('Avatar load error');
                     showToast('头像加载失败', 'error');
                 };
 
@@ -4205,22 +4468,38 @@ ${uiTemplatePrompt.value.trim() || '根据当前角色自动设计一个状态�
                 const generateAvatarUrl = (tag) => {
                     let url;
                     console.log('%c[Workshop Image Request]', 'color: #ec4899; font-weight: bold;', { style: options.avatarStyle, tag: tag });
-                    const tokenParam = options.imageGenKey ? options.imageGenKey : 'STD-QMqT4lxiWqWMVneiePiE';
+                    const tokenParam = options.imageGenKey.trim();
                     const defaultArtists = '[[[artist:dishwasher1910]]], {{yd_(orange_maru)}}, [artist:ciloranko], [artist:sho_(sho_lwlw)], [ningen mame], year 2024,';
+                    const comicDoujinArtists = `(masterpiece:1.3), (best quality:1.2), (highres), (absurdres),
+(extremely detailed illustration:1.2), (anime style:1.1),
+
+(artist:feipin zhanshi:1.0), (artist:nlebo-hentai:0.9), (artist:sos adult:0.85),
+(artist:hews:0.4),
+
+(detailed skin texture:1.15), (glossy skin:1.1),
+(thick lineart:1.1), (high contrast:1.15),
+(vivid colors:1.1), (detailed shading:1.15),
+(warm color palette:1.05),
+(cute face:1.1), (detailed eyes:1.15), (detailed face:1.1),`;
                     const r18Artists = "0.9::misaka_12003-gou ::, dino_(dinoartforame), wanke, liduke, year 2025, realistic, 4k, -2::green ::, textless version, The image is highly intricate finished drawn. Only the character's face is in anime style, but their body is in realistic style. 1.35::A highly finished photo-style artwork that has lively color, graphic texture, realistic skin surface, and lifelike flesh with little obliques::. 1.63::photorealistic::, 1.63::photo(medium)::, \\n20::best quality, absurdres, very aesthetic, detailed, masterpiece::,, very aesthetic, masterpiece, no text,";
+                    const lolita25dArtists = "0.9::misaka_12003-gou & dino, rurudo,  mignon,wanke & liduk::, year 2025, realistic, 4k, -2::green ::, textless version, The image is highly intricate finished drawn. Only the character's face is in anime style, but their body is in realistic style. 1.35::A highly finished photo-style artwork that has lively color, graphic texture, realistic skin surface, and lifelike flesh with little obliques::. 1.63::photorealistic::, 1.63::photo(medium)::, \\n20::best quality, absurdres, very aesthetic, detailed, masterpiece::,, very aesthetic, masterpiece, no text,";
                     const animeArtists = '1.4::asanagi::,{{{{{artist:asanagi}}}}},1.2::xiaoluo_xl::,1.3::Artist: misaka_12003-gou::,1.2::Artist:shexyo::,0.7::Artist:b.sa_(bbbs)::,1::Artist:qiandaiyiyu::,1.05::artist:natedecock::,1.05::artist:kunaboto::,0.75::artist:kandata_nijou::,1.05::artist:zer0.zer0 ::,1.05::artist:jasony::,0.75::misaka_12003-gou ::, dino_(dinoartforame), wanke, liduke, year 2025, realistic, 4k, -2::green ::, {textless version, The image is highly intricate finished drawn,write realistically,true to life}, 1.35::A highly finished photo-style artwork that has lively color, graphic texture, realistic skin surface, and lifelike flesh with little obliques::, 1.63::photorealistic::,3::age slider::,1.63::photo(medium)::, 2::best quality, absurdres, very aesthetic, detailed, masterpiece::,-4::Muscle definition, abs::';
                     const galgameArtists = 'artist:ningen_mame,, noyu_(noyu23386566),, toosaka asagi,, location,\\n20::best quality, absurdres, very aesthetic, detailed, masterpiece::,:,, very aesthetic, masterpiece, no text,';
 
                     let targetArtists = defaultArtists;
-                    if (options.avatarStyle === 'hentai') {
+                    if (options.avatarStyle === 'comicDoujin') {
+                        targetArtists = comicDoujinArtists;
+                    } else if (options.avatarStyle === 'hentai') {
                         targetArtists = r18Artists;
+                    } else if (options.avatarStyle === 'lolita25d') {
+                        targetArtists = lolita25dArtists;
                     } else if (options.avatarStyle === 'anime') {
                         targetArtists = animeArtists;
                     } else if (options.avatarStyle === 'galgame') {
                         targetArtists = galgameArtists;
                     }
 
-                    const baseUrl = tokenParam.trim().toUpperCase().startsWith('STA1N') ? 'https://nai.sta1n.cn' : 'https://std.loliyc.com';
+                    const baseUrl = IMAGE_GEN_BASE_URL;
                     url = `${baseUrl}/generate?tag=${encodeURIComponent(tag)}&token=${tokenParam}&model=nai-diffusion-4-5-full&artist=${encodeURIComponent(targetArtists)}&size=竖图&steps=40&scale=6&cfg=0&sampler=k_dpmpp_2m_sde&negative={{{{bad anatomy}}}},{bad feet},bad hands,{{{bad proportions}}},{blurry},cloned face,cropped,{{{deformed}}},{{{disfigured}}},error,{{{extra arms}}},{extra digit},{{{extra legs}}},extra limbs,{{extra limbs}},{fewer digits},{{{fused fingers}}},gross proportions,ink eyes,ink hair,jpeg artifacts,{{{{long neck}}}},low quality,{malformed limbs},{{missing arms}},{missing fingers},{{missing legs}},{{{more than 2 nipples}}},mutated hands,{{{mutation}}},normal quality,owres,{{poorly drawn face}},{{poorly drawn hands}},reen eyes,signature,text,{{too many fingers}},{{{ugly}}},username,uta,watermark,worst quality,{{{more than 2 legs}}},awkward hand sign,weird hand gesture,contorted hand,unnatural finger pose,deformed hand gesture{shaka},{hang loose},{{rock on}},{shaka sign}&nocache=0&noise_schedule=karras`;
                     return url;
                 };
@@ -4289,7 +4568,7 @@ ${uiTemplatePrompt.value.trim() || '根据当前角色自动设计一个状态�
                     showToast('开始生成...', 'info');
                     isGenerating.value = true;
                     generationProgress.value = 0;
-                    generationStatus.value = '正在解析指令...';
+                    generationStatus.value = '正在等待API响应...';
                     generatedSections.clear(); // Reset generated sections tracker
                     abortController.value = new AbortController();
 
@@ -4314,7 +4593,7 @@ ${uiTemplatePrompt.value.trim() || '根据当前角色自动设计一个状态�
 ### Creator Notes
 (作者注释，必填，使用简单的#+关键词的标签形式说明人物卡的内容，每个关键词之间隔一个空格，例如#纯爱 #校园，如有大量色情内容请在最前面添加#R18标签，如没有过多关于性或者色情的内容请不要随意添加#R18标签)
 ### Avatar Prompt（前面的内容结束后）
-(头像提示词，请使用英文描写，格式必须为: <image>image###生成的提示词###</image> ，仅一段符合角色卡的生图提示词，novelai格式，有nsfw内容请添加nsfw标签)
+(头像提示词，请使用英文描写，格式必须为: <image>image###生成的提示词###</image> ，仅一段符合角色卡的生图提示词，novelai格式；如果是同人/已有作品角色，生成的提示词最前面必须先写官方英文名或常用角色Tag，再写外貌、服装、动作等Tag；有nsfw内容请添加nsfw标签，若同时是同人角色，角色名放第一位，nsfw紧跟其后)
 ${options.generateExtra ? `### World Info
 (世界书条目，用来加强设定，补充详细内容，规范UI内容，增强AI记忆能力，必须是合法的 JSON 数组格式，应根据角色卡复杂程度决定条目数量的多少。包含字段：
 - keys (字符串数组): 触发词
@@ -4322,7 +4601,6 @@ ${options.generateExtra ? `### World Info
 - comment (字符串): (简略易懂的描述，中文，作为条目的标识)
 - constant (布尔): 是否常驻
 - useRegex (布尔): 是否使用正则匹配关键词
-- caseSensitive (布尔): 是否区分大小写
 - position (字符串): 插入位置，必须是以下规范的值之一（按适用场景选择）：
   - "before_char": 适合在角色详情前补充的前置世界背景。
   - "after_char": 适合在角色详情后的设定补充、或定义格式（如：强制规定必须写心理描写的样式规范）。
@@ -4333,13 +4611,9 @@ ${options.generateExtra ? `### World Info
   - "assistant_top": 适合强加给AI的行为指导或短期内心引导。
 - order (数字，1-99): 插入顺序，数字不允许重复，多个条目应确保使用不同的插入顺序
 - probability (数字 0-100): 触发概率
-- useProbability (布尔): 是否启用概率
-- depth (数字): 扫描深度 (仅当 position 为 "at_depth" 时有效，建议值为0-4)
-- scanDepth (数字): 触发扫描深度
-- excludeRecursion (布尔): 是否排除递归
-- preventRecursion (布尔): 是否阻止后续递归
-- delayUntilRecursion (布尔): 是否仅在递归扫描时触发
-- matchWholeWords (布尔): 是否全词匹配
+- useProbability (布尔): 是否启用概率；只影响非 常驻 条目的关键词/正则触发
+- depth (数字): 插入深度，仅当 position 为 "at_depth" 时有效，建议值为0-4
+- scanDepth (数字): 关键词触发时向上扫描的对话深度
 )
 ### Regex Scripts
 (正则脚本，必须生成，用于美化输出或处理特定逻辑，必须是合法的 JSON 数组格式。包含字段：
@@ -4349,8 +4623,8 @@ ${options.generateExtra ? `### World Info
 - replacement (字符串): 替换内容
 - placement (数字数组 [1,2]): 1=User, 2=AI
 - enabled (布尔): 是否启用
-- markdownOnly (布尔): 仅在Markdown渲染时生效
-- promptOnly (布尔): 仅在发送给AI的Prompt中生效
+- markdownOnly (布尔): 仅用户可见，只在界面显示时生效
+- promptOnly (布尔): 仅AI可见，只在发送给AI的完整上下文中生效；markdownOnly 与 promptOnly 不能同时为 true
 - minDepth (数字或null): 最小生效深度
 - maxDepth (数字或null): 最大生效深度
 )
@@ -4359,7 +4633,8 @@ ${options.generateExtra ? `### World Info
    - 必须生成一套“阅读卡片式正文美化”正则，而不是只做简单改色。效果类型参考：柔和信纸、档案页、手帐便签、病历/报告、暗黑契约、科幻终端、旧日书页、雨夜短信、童话绘本等。请根据当前角色的气质、时代、职业、关系张力和世界观自动选择主题；禁止固定复刻某一种金色样式。
    - 美化应服务于阅读体验：正文像一个完整的沉浸式面板，心理活动像独立的内心便签或引用卡，对话像精致引语，角色名、{{user}}、关键物件像柔和标签。不要生成顶部状态栏、下载按钮、关闭按钮等应用外壳控件。
    - 所有 replacement 必须是单行 HTML 字符串，优先使用内联 CSS；禁止远程图片、外链字体、script、position: fixed、遮挡正文的浮层。所有双引号必须在 JSON 字符串中正确转义，或在 HTML 属性中改用单引号。
-   - 每个脚本建议：enabled=true，markdownOnly=true，promptOnly=false，placement=[2]，flags="g"。
+   - 每个脚本建议：enabled=true，markdownOnly=true（仅用户可见），promptOnly=false，placement=[2]，flags="g"。
+   - markdownOnly 与 promptOnly 互斥，绝不能同时为 true。
    - 脚本组合必须至少包含：
      1. "正文阅读面板"：数组第一位，regex 字段写 \`^([\\s\\S]+)$\`，把整段正文包裹进一个响应式 \`div\`。容器需包含主题背景、细边框/侧边强调线、柔和阴影、充足 padding、合理行高、\`white-space: pre-wrap;\`、\`overflow-wrap: anywhere;\`、\`max-width: 100%;\`、\`margin: 0;\`，且不能依赖图片背景。
      2. "心理独白卡"：匹配 \`（([^）]*?)）\`，生成块级便签/引用样式，例如左侧竖线、淡背景、轻微内阴影、小图形点缀或 quote 标记，呈现内敛的心理独白感。
@@ -4367,8 +4642,9 @@ ${options.generateExtra ? `### World Info
      4. "角色/用户/关键词标签"：为角色名、{{user}}、重要物件或特殊名词生成 2-5 个精致行内标签脚本，使用半透明底色、小圆角、轻边框或小色块，避免把普通高频字词全部高亮。
    - 颜色与排版必须随角色变化：温柔系可用奶油/浅金/粉白，冷淡系可用雾蓝/银灰，危险系可用酒红/黑金，科幻系可用青蓝/荧光线，古典系可用宣纸/墨色。不要让所有角色都长得一样。
 
-**世界书 (World Info) 生成规范**（所有条目禁止使用按深度）：
+**世界书 (World Info) 生成规范**（格式规范类常驻条目不要使用按深度）：
 - **样式规范与心理对话格式（必填 & 常驻）**：必须包含一条名为 "样式规范" 的常驻条目（Position=after_char）。内容需明确指示：“在回复中必须包含丰富细腻的心理活动或心理对话，且心理活动必须使用圆括号（）包裹，说出口的对话请使用『』包裹。请严格遵守此格式输出，以便系统进行高亮渲染。”
+- constant=true 表示不依赖关键词触发，启用后始终插入；useProbability 只影响非 常驻 条目的关键词/正则触发。
 - **重要提示**：在 JSON 内容中，如果涉及到双引号（"），**必须**使用反斜杠进行转义（如：\\"），否则会导致系统解析失败。
 - **世界观设定**：必须包含一条名为“世界观”的详细条目（内容最少1000字），必须详尽详细描述世界背景、社会结构等，为 AI 的自由发挥提供坚实基础。
 - **角色设定**：必须包含名为“XX的设定”的详细条目，详细描述某个对应角色具体设定，为 AI 的自由发挥提供坚实基础，多个角色可拥有多世界书条目。
@@ -4401,6 +4677,7 @@ JSON 字段（世界书/正则脚本）必须输出为合法的 JSON 数组，**
                         try {
                             const baseUrl = api.url.replace(/\/+$/, '');
                             const apiUrl = baseUrl.endsWith('/v1') ? baseUrl : `${baseUrl}/v1`;
+                            if (!isRetry) generationStatus.value = '正在等待API响应...';
 
                             console.log('%c[Workshop AI Request]', 'color: #3b82f6; font-weight: bold;', { url: apiUrl, model: api.model });
                             const response = await fetch(`${apiUrl}/chat/completions`, {
@@ -4436,23 +4713,49 @@ JSON 字段（世界书/正则脚本）必须输出为合法的 JSON 数组，**
                                 const reader = response.body.getReader();
                                 const decoder = new TextDecoder();
                                 let buffer = '';
+                                let rawContentBuffer = '';
+                                let sseBuffer = '';
+                                let receivedContent = false;
 
                                 while (true) {
                                     const { done, value } = await reader.read();
                                     if (done) break;
 
-                                    const chunk = decoder.decode(value, { stream: true });
-                                    const lines = chunk.split('\n');
+                                    sseBuffer += decoder.decode(value, { stream: true });
+                                    const lines = sseBuffer.split('\n');
+                                    sseBuffer = lines.pop() || '';
                                     for (const line of lines) {
-                                        if (line.startsWith('data: ')) {
-                                            const data = line.slice(6);
+                                        const trimmedLine = line.trim();
+                                        if (trimmedLine.startsWith('data:')) {
+                                            const data = trimmedLine.replace(/^data:\s*/, '');
                                             if (data === '[DONE]') continue;
                                             try {
                                                 const json = JSON.parse(data);
-                                                const content = json.choices[0]?.delta?.content || '';
+                                                const choice = json.choices?.[0];
+                                                const delta = choice?.delta || choice?.message || {};
+                                                const reasoning = extractNativeReasoning(delta) || extractNativeReasoning(choice);
+                                                if (reasoning) {
+                                                    if (!receivedContent) {
+                                                        generationStatus.value = '正在思考...';
+                                                    }
+                                                }
+
+                                                const content = delta.content || '';
                                                 if (content) {
-                                                    buffer += content;
-                                                    parseBuffer(buffer);
+                                                    rawContentBuffer += content;
+                                                    if (hasInlineThinking(rawContentBuffer) && !receivedContent) {
+                                                        generationStatus.value = '正在思考...';
+                                                    }
+                                                    const visibleContent = stripInlineThinking(rawContentBuffer);
+                                                    if (hasInlineThinking(rawContentBuffer) && !visibleContent.trim()) {
+                                                        generationStatus.value = '正在思考...';
+                                                        continue;
+                                                    }
+                                                    if (visibleContent) {
+                                                        receivedContent = true;
+                                                        buffer = visibleContent;
+                                                        parseBuffer(buffer);
+                                                    }
                                                 }
                                             } catch (e) { }
                                         }
@@ -4461,7 +4764,11 @@ JSON 字段（世界书/正则脚本）必须输出为合法的 JSON 数组，**
                                 fullContent = buffer;
                             } else {
                                 const data = await response.json();
-                                const content = data.choices[0]?.message?.content || '';
+                                const message = data.choices?.[0]?.message || {};
+                                const reasoning = extractNativeReasoning(message);
+                                const rawContent = message.content || '';
+                                if (reasoning || hasInlineThinking(rawContent)) generationStatus.value = '正在思考...';
+                                const content = stripInlineThinking(rawContent);
                                 parseBuffer(content);
                                 fullContent = content;
                             }
@@ -4539,6 +4846,103 @@ JSON 字段（世界书/正则脚本）必须输出为合法的 JSON 数组，**
                 };
 
                 const generatedSections = reactive(new Set());
+
+                const stripJsonCodeFence = (text = '') => {
+                    return String(text || '')
+                        .trim()
+                        .replace(/^```(?:json)?\s*/i, '')
+                        .replace(/\s*```\s*$/i, '')
+                        .trim();
+                };
+
+                const parseJsonWithLightRepair = (str) => {
+                    try {
+                        return JSON.parse(str);
+                    } catch (err) {
+                        const fixed = str.replace(/("(?:content|comment|keys|name|regex|replacement|scriptName|findRegex|replaceString)"\s*:\s*")([\s\S]*?)("\s*[,\]}])/g, (m, p1, p2, p3) => {
+                            const escapedP2 = p2.replace(/(?<!\\)"/g, '\\"');
+                            return p1 + escapedP2 + p3;
+                        });
+                        return JSON.parse(fixed);
+                    }
+                };
+
+                const extractCompleteJsonObjects = (text = '') => {
+                    const values = [];
+                    let start = -1;
+                    let depth = 0;
+                    let inString = false;
+                    let escape = false;
+
+                    for (let i = 0; i < text.length; i++) {
+                        const char = text[i];
+                        if (inString) {
+                            if (escape) {
+                                escape = false;
+                            } else if (char === '\\') {
+                                escape = true;
+                            } else if (char === '"') {
+                                inString = false;
+                            }
+                            continue;
+                        }
+                        if (char === '"') {
+                            inString = true;
+                            continue;
+                        }
+                        if (char === '{') {
+                            if (depth === 0) start = i;
+                            depth++;
+                        } else if (char === '}' && depth > 0) {
+                            depth--;
+                            if (depth === 0 && start !== -1) {
+                                values.push(text.slice(start, i + 1));
+                                start = -1;
+                            }
+                        }
+                    }
+
+                    return values;
+                };
+
+                const coerceWorldInfoJsonItems = (value) => {
+                    if (Array.isArray(value)) return value;
+                    const entries = extractWorldInfoEntries(value);
+                    if (entries.length) return entries;
+                    if (value && typeof value === 'object' && (value.content !== undefined || value.keys !== undefined || value.key !== undefined || value.comment !== undefined)) {
+                        return [value];
+                    }
+                    return [];
+                };
+
+                const coerceRegexJsonItems = (value) => {
+                    if (Array.isArray(value)) return value;
+                    const scripts = extractRegexEntries(value);
+                    if (scripts.length) return scripts;
+                    if (value && typeof value === 'object' && (value.regex !== undefined || value.findRegex !== undefined || value.replacement !== undefined || value.replaceString !== undefined || value.scriptName !== undefined)) {
+                        return [value];
+                    }
+                    return [];
+                };
+
+                const parseFlexibleJsonItems = (text, coerceItems) => {
+                    const clean = stripJsonCodeFence(text);
+                    if (!clean) return [];
+
+                    try {
+                        const directItems = coerceItems(parseJsonWithLightRepair(clean));
+                        if (directItems.length) return directItems;
+                    } catch (e) { }
+
+                    const objects = extractCompleteJsonObjects(clean);
+                    const items = [];
+                    for (const objectText of objects) {
+                        try {
+                            items.push(...coerceItems(parseJsonWithLightRepair(objectText)));
+                        } catch (e) { }
+                    }
+                    return items;
+                };
 
                 const parseBuffer = (text) => {
                     const sections = [
@@ -4620,76 +5024,14 @@ JSON 字段（世界书/正则脚本）必须输出为合法的 JSON 数组，**
                             }
 
                             if (section.field === 'world_info_json') {
-                                try {
-                                    let jsonStr = content.trim();
-                                    // Remove markdown code blocks if present
-                                    if (jsonStr.startsWith('```')) {
-                                        jsonStr = jsonStr.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
-                                    }
-
-                                    // Attempt to extract JSON array if not clean (e.g. surrounding text)
-                                    const arrayMatch = jsonStr.match(/\[[\s\S]*\]/);
-                                    if (arrayMatch) {
-                                        jsonStr = arrayMatch[0];
-                                    }
-
-                                    // 预处理：修复 AI 常见的 JSON 错误（如未转义的双引号）
-                                    // 专门针对 "content": "..." 或 "comment": "..." 这种模式
-                                    const fixJson = (str) => {
-                                        try {
-                                            return JSON.parse(str);
-                                        } catch (err) {
-                                            // 如果解析失败，尝试修复 content 字段中的未转义双引号
-                                            // 这是一个极简的启发式修复：查找 "content": "..." 模式
-                                            // 将其中被双引号包裹但不是作为 KV 分隔符的内容进行转义
-                                            let fixed = str.replace(/("(?:content|comment|keys|name|regex|replacement|scriptName|findRegex|replaceString)"\s*:\s*")([\s\S]*?)("\s*[,\]}])/g, (m, p1, p2, p3) => {
-                                                // 将内部的 " 转义为 \"，但要排除已经转义过的
-                                                const escapedP2 = p2.replace(/(?<!\\)"/g, '\\"');
-                                                return p1 + escapedP2 + p3;
-                                            });
-                                            return JSON.parse(fixed);
-                                        }
-                                    };
-
-                                    const parsed = fixJson(jsonStr);
-                                    if (Array.isArray(parsed)) {
-                                        currentCharacter.value.worldInfo = parsed.map(normalizeWorldInfoEntry);
-                                    }
-                                } catch (e) {
-                                    // Only log/warn if it looks like a complete JSON block failed
-                                    // console.warn('World Info Parse Error:', e);
+                                const parsedEntries = parseFlexibleJsonItems(content, coerceWorldInfoJsonItems);
+                                if (parsedEntries.length) {
+                                    currentCharacter.value.worldInfo = parsedEntries.map(normalizeWorldInfoEntry);
                                 }
                             } else if (section.field === 'regex_scripts_json') {
-                                try {
-                                    let jsonStr = content.trim();
-                                    // Remove markdown code blocks if present
-                                    if (jsonStr.startsWith('```')) {
-                                        jsonStr = jsonStr.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
-                                    }
-
-                                    // Attempt to extract JSON array if not clean (e.g. surrounding text)
-                                    const arrayMatch = jsonStr.match(/\[[\s\S]*\]/);
-                                    if (arrayMatch) {
-                                        jsonStr = arrayMatch[0];
-                                    }
-
-                                    const fixJson = (str) => {
-                                        try { return JSON.parse(str); }
-                                        catch (err) {
-                                            let fixed = str.replace(/("(?:content|comment|keys|name|regex|replacement|scriptName|findRegex|replaceString)"\s*:\s*")([\s\S]*?)("\s*[,\]}])/g, (m, p1, p2, p3) => {
-                                                const escapedP2 = p2.replace(/(?<!\\)"/g, '\\"');
-                                                return p1 + escapedP2 + p3;
-                                            });
-                                            return JSON.parse(fixed);
-                                        }
-                                    };
-
-                                    const parsed = fixJson(jsonStr);
-                                    if (Array.isArray(parsed)) {
-                                        currentCharacter.value.regexScripts = parsed.map(normalizeRegexScript);
-                                    }
-                                } catch (e) {
-                                    // console.warn('Regex Scripts Parse Error:', e);
+                                const parsedScripts = parseFlexibleJsonItems(content, coerceRegexJsonItems);
+                                if (parsedScripts.length) {
+                                    currentCharacter.value.regexScripts = parsedScripts.map(normalizeRegexScript);
                                 }
                             } else if (section.field === 'avatar_prompt') {
                                 // 简单的防抖，避免流式传输中途频繁打印
@@ -4727,40 +5069,11 @@ JSON 字段（世界书/正则脚本）必须输出为合法的 JSON 数组，**
 
                 const getCardData = () => {
                     const char = currentCharacter.value;
-                    return {
-                        spec: 'chara_card_v3',
-                        spec_version: '3.0',
-                        data: {
-                            name: char.name,
-                            description: char.description,
-                            personality: char.personality,
-                            scenario: char.scenario,
-                            first_mes: char.first_mes,
-                            mes_example: char.mes_example,
-                            creator_notes: char.creator_notes,
-                            system_prompt: char.system_prompt,
-                            post_history_instructions: char.post_history_instructions,
-                            tags: char.tags,
-                            uiTemplates: char.uiTemplates.length > 0 ? char.uiTemplates.map(template => toUiTemplateExportEntry(template)) : [],
-                            creator: "AI CharGen",
-                            character_version: "0.9",
-                            alternate_greetings: [],
-                            extensions: {
-                                avatar_prompt: char.avatar_prompt,
-                                world: "",
-                                depth_prompt: {
-                                    prompt: char.depth_prompt.prompt,
-                                    depth: char.depth_prompt.depth,
-                                    role: char.depth_prompt.role
-                                },
-                                regex_scripts: char.regexScripts.length > 0 ? char.regexScripts.map(s => toRegexExportEntry(s)) : [],
-                                rp_hub_ui_templates: char.uiTemplates.length > 0 ? char.uiTemplates.map(template => toUiTemplateExportEntry(template)) : []
-                            },
-                            character_book: char.worldInfo.length > 0 ? {
-                                entries: char.worldInfo.map((entry, idx) => toWorldInfoExportEntry(entry, idx))
-                            } : undefined
-                        }
-                    };
+                    return cardUtils.buildCharacterCardData(char, {
+                        worldInfoMapper: (entry, idx) => toWorldInfoExportEntry(entry, idx),
+                        regexScriptMapper: (script) => toRegexExportEntry(script),
+                        uiTemplateMapper: (template) => toUiTemplateExportEntry(template)
+                    });
                 };
 
                 // 文件名净化函数
@@ -4775,25 +5088,8 @@ JSON 字段（世界书/正则脚本）必须输出为合法的 JSON 数组，**
                     return sanitizeFilename(String(name || '').replace(/\s+/g, '_'), defaultName).slice(0, 48) || defaultName;
                 };
 
-                // 通用下载函数，解决部分浏览器（如 Via）不兼容异步下载的问题
                 const downloadFile = (blob, filename) => {
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = filename;
-
-                    // 某些移动端浏览器（如 Via, UC）在没有 target="_blank" 的情况下可能拦截下载
-                    a.target = '_blank';
-
-                    a.style.display = 'none';
-                    document.body.appendChild(a);
-                    a.click();
-
-                    // 延迟释放，确保浏览器已开始处理下载
-                    setTimeout(() => {
-                        document.body.removeChild(a);
-                        URL.revokeObjectURL(url);
-                    }, 2000);
+                    cardUtils.downloadBlob(blob, filename, { targetBlank: true, revokeDelay: 2000 });
                 };
 
                 const exportJSON = () => {
@@ -4809,33 +5105,19 @@ JSON 字段（世界书/正则脚本）必须输出为合法的 JSON 数组，**
                         return;
                     }
 
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    const img = new Image();
-
-                    await new Promise((resolve, reject) => {
-                        img.onload = resolve;
-                        img.onerror = reject;
-                        img.src = currentCharacter.value.avatar;
-                    });
-
-                    canvas.width = img.width;
-                    canvas.height = img.height;
-                    ctx.drawImage(img, 0, 0);
-
-                    const base64 = canvas.toDataURL('image/png');
-                    const binary = atob(base64.split(',')[1]);
-                    const array = new Uint8Array(binary.length);
-                    for (let i = 0; i < binary.length; i++) {
-                        array[i] = binary.charCodeAt(i);
+                    const imageOptions = {};
+                    if (/^https?:\/\//i.test(currentCharacter.value.avatar)) {
+                        imageOptions.crossOrigin = 'anonymous';
+                        imageOptions.referrerPolicy = 'no-referrer';
                     }
 
                     const cardData = getCardData();
-                    const jsonStr = JSON.stringify(cardData);
-                    const jsonBase64 = btoa(unescape(encodeURIComponent(jsonStr)));
-
-                    const newPng = injectPngChunk(array, 'chara', jsonBase64);
-
+                    const pngBytes = await cardUtils.imageUrlToPngBytes(currentCharacter.value.avatar, imageOptions);
+                    const newPng = cardUtils.injectPngTextChunk(
+                        pngBytes,
+                        'chara',
+                        cardUtils.encodeBase64Utf8(JSON.stringify(cardData))
+                    );
                     const blob = new Blob([newPng], { type: 'image/png' });
                     const filename = sanitizeFilename(currentCharacter.value.name) + '.png';
                     downloadFile(blob, filename);
@@ -4849,13 +5131,7 @@ JSON 字段（世界书/正则脚本）必须输出为合法的 JSON 数组，**
                             source: worldInfo.value,
                             name: (entry, index) => entry.comment || entry.name || entry.keys?.[0] || `世界书条目 ${index + 1}`,
                             description: (entry) => Array.isArray(entry.keys) && entry.keys.length ? entry.keys.join('、') : entry.content,
-                            build: (items) => {
-                                const entries = {};
-                                items.forEach((entry, index) => {
-                                    entries[index] = toWorldInfoExportEntry(entry, index);
-                                });
-                                return { entries };
-                            }
+                            build: (items) => ({ entries: items.map((entry, index) => toWorldInfoExportEntry(entry, index)) })
                         },
                         regex: {
                             title: '正则',
@@ -4929,63 +5205,6 @@ JSON 字段（世界书/正则脚本）必须输出为合法的 JSON 数组，**
                 const exportRegex = () => openSelectiveExport('regex');
                 const exportUiTemplates = () => openSelectiveExport('ui');
 
-                const injectPngChunk = (pngBuffer, key, value) => {
-                    const signature = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
-                    const keyBytes = new TextEncoder().encode(key);
-                    const valBytes = new TextEncoder().encode(value);
-                    const chunkData = new Uint8Array(keyBytes.length + 1 + valBytes.length);
-                    chunkData.set(keyBytes, 0);
-                    chunkData[keyBytes.length] = 0;
-                    chunkData.set(valBytes, keyBytes.length + 1);
-
-                    const crcTable = [];
-                    for (let n = 0; n < 256; n++) {
-                        let c = n;
-                        for (let k = 0; k < 8; k++) {
-                            if (c & 1) c = 0xedb88320 ^ (c >>> 1);
-                            else c = c >>> 1;
-                        }
-                        crcTable[n] = c;
-                    }
-                    const crc32 = (buf) => {
-                        let c = 0xffffffff;
-                        for (let i = 0; i < buf.length; i++) {
-                            c = crcTable[(c ^ buf[i]) & 0xff] ^ (c >>> 8);
-                        }
-                        return c ^ 0xffffffff;
-                    };
-
-                    const type = new TextEncoder().encode('tEXt');
-                    const crcInput = new Uint8Array(type.length + chunkData.length);
-                    crcInput.set(type, 0);
-                    crcInput.set(chunkData, type.length);
-                    const crc = crc32(crcInput);
-
-                    const chunkLen = chunkData.length;
-                    const fullChunk = new Uint8Array(4 + 4 + chunkLen + 4);
-                    new DataView(fullChunk.buffer).setUint32(0, chunkLen, false);
-                    fullChunk.set(type, 4);
-                    fullChunk.set(chunkData, 8);
-                    new DataView(fullChunk.buffer).setUint32(8 + chunkLen, crc, false);
-
-                    let pos = 8;
-                    while (pos < pngBuffer.length) {
-                        const len = new DataView(pngBuffer.buffer).getUint32(pos, false);
-                        const typeStr = String.fromCharCode(...pngBuffer.slice(pos + 4, pos + 8));
-                        if (typeStr === 'IHDR') {
-                            pos += 8 + len + 4;
-                            break;
-                        }
-                        pos += 8 + len + 4;
-                    }
-
-                    const result = new Uint8Array(pngBuffer.length + fullChunk.length);
-                    result.set(pngBuffer.slice(0, pos), 0);
-                    result.set(fullChunk, pos);
-                    result.set(pngBuffer.slice(pos), pos + fullChunk.length);
-                    return result;
-                };
-
                 return {
                     showSettings,
                     showPreview,
@@ -5009,6 +5228,8 @@ JSON 字段（世界书/正则脚本）必须输出为合法的 JSON 数组，**
                     uiTemplatePrompt,
                     uiTemplateGenerationMode,
                     uiTemplateTargetIndex,
+                    uiTemplateTargetOptions,
+                    uiTemplatePlacementOptions,
                     worldInfoPositionOptions,
                     tabs,
                     createNewCharacter,
@@ -5016,9 +5237,11 @@ JSON 字段（世界书/正则脚本）必须输出为合法的 JSON 数组，**
                     deleteCharacter,
                     addWorldEntry,
                     removeWorldEntry,
+                    importWorldInfoFile,
                     updateEntryKeys,
                     addRegexScript,
                     removeRegexScript,
+                    importRegexFile,
                     addUiTemplate,
                     removeUiTemplate,
                     generateUiTemplate,
@@ -5029,6 +5252,7 @@ JSON 字段（世界书/正则脚本）必须输出为合法的 JSON 数组，**
                     hasFlag,
                     toggleFlag,
                     handleImageUpload,
+                    importCharacterCard,
                     cacheAvatar,
                     rerollAvatar,
                     generateCharacter,
