@@ -20,10 +20,8 @@ const parseCot = (text) => {
     if (!text) return { cot: '', main: '', sys: '', isFinished: false };
     if (parseCotCache.has(text)) return parseCotCache.get(text);
 
-    // 匹配 <think> 或 <cot> 标签，支持未闭合的情况
-    // 优化正则：允许闭合标签中存在空格，防止因闭合标签格式不规范（如 </think >）导致正文被吞
-    // 同时支持闭合标签缺失斜杠的情况（如 <cot>...<cot>），这是某些模型常见的错误输出
-    const cotPattern = /<(think|cot)>([\s\S]*?)(?:<\/\s*\1\s*>|<\s*\1\s*>|$)/gi;
+    // 匹配 thinking/think/cot 标签，兼容未闭合、带空格闭合和缺少斜杠的错误闭合
+    const cotPattern = /<(thinking|think|cot)>([\s\S]*?)(?:<\/\s*\1\s*>|<\s*\1\s*>|$)/gi;
     let cotContent = '';
     let mainContent = text;
     let isFinished = false;
@@ -283,13 +281,32 @@ window.RPHubUtils = {
         return { pattern: normalizedPattern, flags: normalizedFlags };
     };
 
-    const protectedContentPattern = /(<!DOCTYPE html>[\s\S]*?<\/html>|<html\b[^>]*>[\s\S]*?<\/html>|<script\b[^>]*>[\s\S]*?<\/script>|<style\b[^>]*>[\s\S]*?<\/style>|<(?:cot|think)>[\s\S]*?(?:<\/(?:cot|think)>|<(?:cot|think)>|$)|```[\s\S]*?```|`[^`]+`|<\/?[a-zA-Z][\w:-]*[^>]*>)/gi;
-    const exactProtectedContentPattern = /^(<!DOCTYPE html>[\s\S]*?<\/html>|<html\b[^>]*>[\s\S]*?<\/html>|<script\b[^>]*>[\s\S]*?<\/script>|<style\b[^>]*>[\s\S]*?<\/style>|<(?:cot|think)>[\s\S]*?(?:<\/(?:cot|think)>|<(?:cot|think)>|$)|```[\s\S]*?```|`[^`]+`|<\/?[a-zA-Z][\w:-]*[^>]*>)$/i;
-
+    const protectedContentPattern = /(<!DOCTYPE html>[\s\S]*?<\/html>|<html\b[^>]*>[\s\S]*?<\/html>|<script\b[^>]*>[\s\S]*?<\/script>|<style\b[^>]*>[\s\S]*?<\/style>|<!DOCTYPE html>[\s\S]*$|<html\b[^>]*>[\s\S]*$|<script\b[^>]*>[\s\S]*$|<style\b[^>]*>[\s\S]*$|<(?:thinking|cot|think)>[\s\S]*?(?:<\/(?:thinking|cot|think)>|<(?:thinking|cot|think)>|$)|```[\s\S]*?```|```[\s\S]*$|`[^`]+`|<\/?(?!ui_template_updates\b)[a-zA-Z][\w:-]*[^>]*>)/gi;
+    const exactProtectedContentPattern = /^(<!DOCTYPE html>[\s\S]*?<\/html>|<html\b[^>]*>[\s\S]*?<\/html>|<script\b[^>]*>[\s\S]*?<\/script>|<style\b[^>]*>[\s\S]*?<\/style>|<!DOCTYPE html>[\s\S]*$|<html\b[^>]*>[\s\S]*$|<script\b[^>]*>[\s\S]*$|<style\b[^>]*>[\s\S]*$|<(?:thinking|cot|think)>[\s\S]*?(?:<\/(?:thinking|cot|think)>|<(?:thinking|cot|think)>|$)|```[\s\S]*?```|```[\s\S]*$|`[^`]+`|<\/?(?!ui_template_updates\b)[a-zA-Z][\w:-]*[^>]*>)$/i;
     const transformUnprotectedText = (text, transform) => String(text || '')
         .split(protectedContentPattern)
         .map(part => !part || exactProtectedContentPattern.test(part) ? part : transform(part))
         .join('');
+
+    const findLastUnprotectedMatch = (text, pattern) => {
+        const source = String(text || '');
+        let offset = 0;
+        let lastMatch = null;
+        source.split(protectedContentPattern).forEach(part => {
+            if (!part) return;
+            if (!exactProtectedContentPattern.test(part)) {
+                const flags = pattern.flags.includes('g') ? pattern.flags : `${pattern.flags}g`;
+                const matcher = new RegExp(pattern.source, flags.replace('y', ''));
+                let match;
+                while ((match = matcher.exec(part)) !== null) {
+                    lastMatch = { index: offset + match.index, text: match[0] };
+                    if (!match[0]) matcher.lastIndex += 1;
+                }
+            }
+            offset += part.length;
+        });
+        return lastMatch;
+    };
 
     const encodeUtf8 = (value) => {
         if (textEncoder) return textEncoder.encode(String(value ?? ''));
@@ -889,6 +906,7 @@ window.RPHubUtils = {
         encodeBase64Utf8,
         extractNativeReasoning,
         findPngCharacterPayload,
+        findLastUnprotectedMatch,
         getImageStyleArtists,
         imageUrlToPngBytes,
         injectPngTextChunk,
@@ -930,7 +948,7 @@ window.RPHubUtils = {
                 id: 'sta1n',
                 name: 'STA1N API',
                 apiUrl: 'https://cdn.sta1n.cn/v1',
-                icon: 'https://img.cdn1.vip/i/69c18cc07538b_1774292160.webp'
+                icon: 'https://picui.ogmua.cn/s1/2026/08/21/6a87a751bf871.webp'
             }),
             Object.freeze({
                 id: 'deepseek',
@@ -978,18 +996,16 @@ window.RPHubUtils = {
                 { value: 'galgame', label: 'GalGame风' },
                 { value: 'custom', label: '自定义' }
             ]),
-            imageSizes: Object.freeze([
-                { value: '竖图', label: '竖图(-1)' },
-                { value: '横图', label: '横图(-1)' },
-                { value: '方图', label: '方图(-1)' },
-                { value: '2K竖图', label: '2K竖图(-15)' },
-                { value: '2K横图', label: '2K横图(-15)' },
-                { value: '2K方图', label: '2K方图(-15)' },
-                { value: '4K竖图', label: '4K竖图(-25)' },
-                { value: '4K横图', label: '4K横图(-25)' },
-                { value: '4K方图', label: '4K方图(-25)' }
+            imageModels: Object.freeze([
+                { value: 'nai-diffusion-4-5-full', label: 'V4.5 完整版（-1）' },
+                { value: 'nai-diffusion-5-full', label: 'V5 完整版（-5）' }
             ]),
-            imageCounts: Object.freeze([1, 2, 3, 4, 5, 6].map(count => ({
+            imageSizes: Object.freeze([
+                { value: '竖图', label: '竖图' },
+                { value: '横图', label: '横图' },
+                { value: '方图', label: '方图' }
+            ]),
+            imageCounts: Object.freeze([2, 3, 4, 5, 6, 7, 8].map(count => ({
                 value: count,
                 label: `${count} 张`
             }))),

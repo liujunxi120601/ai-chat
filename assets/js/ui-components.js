@@ -300,9 +300,9 @@
         { view: 'characters', label: '角色卡管理', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' }
     ]);
     const onlineItems = Object.freeze([
-        { view: 'generator', label: '角色卡生成', icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
-        { view: 'square', label: '万相广场', square: true },
-        { view: 'novel', label: '墨韵·造梦', icon: 'M20 19V16H7C5.34315 16 4 17.3431 4 19M8.8 22H16.8C17.9201 22 18.4802 22 18.908 21.782C19.2843 21.5903 19.5903 21.2843 19.782 20.908C20 20.4802 20 19.9201 20 18.8V5.2C20 4.07989 20 3.51984 19.782 3.09202C19.5903 2.71569 19.2843 2.40973 18.908 2.21799C18.4802 2 17.9201 2 16.8 2H8.8C7.11984 2 6.27976 2 5.63803 2.32698C5.07354 2.6146 4.6146 3.07354 4.32698 3.63803C4 4.27976 4 5.11984 4 6.8V17.2C4 18.8802 4 19.7202 4.32698 20.362C4.6146 20.9265 5.07354 21.3854 5.63803 21.673C6.27976 22 7.11984 22 8.8 22Z' }
+        { view: 'generator', label: '角色卡生成', icon: 'M15 8a3 3 0 11-6 0 3 3 0 016 0zm-3 5c-4 0-7 2-7 5v1h8m5-6v6m-3-3h6' },
+        { view: 'novel', label: '小说生成', icon: 'M20 19V16H7C5.34315 16 4 17.3431 4 19M8.8 22H16.8C17.9201 22 18.4802 22 18.908 21.782C19.2843 21.5903 19.5903 21.2843 19.782 20.908C20 20.4802 20 19.9201 20 18.8V5.2C20 4.07989 20 3.51984 19.782 3.09202C19.5903 2.71569 19.2843 2.40973 18.908 2.21799C18.4802 2 17.9201 2 16.8 2H8.8C7.11984 2 6.27976 2 5.63803 2.32698C5.07354 2.6146 4.6146 3.07354 4.32698 3.63803C4 4.27976 4 5.11984 4 6.8V17.2C4 18.8802 4 19.7202 4.32698 20.362C4.6146 20.9265 5.07354 21.3854 5.63803 21.673C6.27976 22 7.11984 22 8.8 22Z' },
+        { view: 'square', label: '万相广场', square: true }
     ]);
     const advancedItems = Object.freeze([
         { view: 'presets', label: '预设', icon: 'M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4M6 18a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4' },
@@ -323,6 +323,7 @@
         },
         emits: ['update:current-view', 'update:collapsed', 'toggle-online', 'toggle-advanced', 'close-mobile'],
         setup(props, { emit }) {
+            window.RPHubUpdateCheck.useUpdateCheck();
             const selectView = (view) => {
                 emit('update:current-view', view);
                 emit('close-mobile');
@@ -624,7 +625,10 @@
             const countdown = ref(0);
             const scrolledToBottom = ref(false);
             const contentEl = ref(null);
+            const remoteUpdateId = ref(null);
+            const pendingRemoteUpdateId = ref(null);
             let countdownTimer = null;
+            let countdownEndsAt = 0;
             let layoutTimer = null;
 
             const clearTimers = () => {
@@ -634,18 +638,39 @@
                 layoutTimer = null;
             };
             const startCountdown = () => {
-                countdown.value = 10;
                 clearInterval(countdownTimer);
-                countdownTimer = setInterval(() => {
-                    if (countdown.value > 0) {
-                        countdown.value--;
-                        return;
-                    }
+                countdownEndsAt = Date.now() + 10_000;
+                const updateCountdown = () => {
+                    countdown.value = Math.max(0, Math.ceil((countdownEndsAt - Date.now()) / 1000));
+                    if (countdown.value > 0) return;
                     clearInterval(countdownTimer);
                     countdownTimer = null;
-                }, 1000);
+                };
+                updateCountdown();
+                countdownTimer = setInterval(updateCountdown, 250);
+            };
+            const showRemoteUpdate = (versionId) => {
+                clearTimers();
+                remoteUpdateId.value = versionId;
+                pendingRemoteUpdateId.value = null;
+                countdown.value = 0;
+                scrolledToBottom.value = true;
+                show.value = true;
+            };
+            const handleRemoteUpdate = (event) => {
+                const versionId = Number(event?.detail?.versionId);
+                if (!Number.isInteger(versionId) || versionId < 10000 || versionId > 99999
+                    || versionId <= Number(props.update.id)) return;
+                if (remoteUpdateId.value !== null) {
+                    remoteUpdateId.value = Math.max(remoteUpdateId.value, versionId);
+                } else if (show.value) {
+                    pendingRemoteUpdateId.value = Math.max(pendingRemoteUpdateId.value || 0, versionId);
+                } else {
+                    showRemoteUpdate(versionId);
+                }
             };
             const check = () => {
+                if (remoteUpdateId.value !== null || pendingRemoteUpdateId.value !== null) return;
                 const lastId = Number.parseInt(localStorage.getItem('roleplay_hub_update_id'), 10);
                 if (Number.isFinite(lastId) && lastId >= props.update.id) return;
 
@@ -663,39 +688,51 @@
                 if (countdown.value > 0) return;
                 show.value = false;
                 clearTimers();
+                remoteUpdateId.value = null;
                 localStorage.setItem('roleplay_hub_update_id', String(props.update.id));
+                if (pendingRemoteUpdateId.value !== null) {
+                    const versionId = pendingRemoteUpdateId.value;
+                    layoutTimer = setTimeout(() => showRemoteUpdate(versionId), 150);
+                }
             };
             const handleScroll = (event) => {
                 const element = event.target;
                 scrolledToBottom.value = element.scrollHeight - element.scrollTop - element.clientHeight < 10;
             };
 
+            window.addEventListener('rphub:update-available', handleRemoteUpdate);
             expose({ check });
-            onBeforeUnmount(clearTimers);
-            return { contentEl, countdown, handleScroll, close, scrolledToBottom, show };
+            onBeforeUnmount(() => {
+                clearTimers();
+                window.removeEventListener('rphub:update-available', handleRemoteUpdate);
+            });
+            return { contentEl, countdown, handleScroll, close, remoteUpdateId, scrolledToBottom, show };
         },
         template: `
             <modal-shell v-if="show" overlay-class="z-[80] bg-black/50 backdrop-blur-sm p-4 animate-fade-in"
                 panel-class="bg-white rounded-xl border border-gray-200 w-full max-w-lg flex flex-col shadow-2xl transform transition-all scale-100 overflow-hidden relative">
                     <div class="bg-gradient-to-r from-primary-50 to-purple-50 p-4 border-b border-gray-100">
                         <div class="flex items-center gap-3">
-                            <h3 class="text-xl font-bold text-gray-900">{{ update.title }}</h3>
+                            <h3 class="text-xl font-bold text-gray-900">{{ remoteUpdateId ? '发现新版本' : update.title }}</h3>
                             <span class="bg-primary-100 text-primary-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-primary-200 transform translate-y-0.5">New</span>
                         </div>
                     </div>
                     <div ref="contentEl" class="p-4 max-h-[75vh] overflow-y-auto custom-scrollbar update-content" @scroll="handleScroll">
-                        <div class="prose prose-sm prose-gray max-w-none">
+                        <div v-if="remoteUpdateId" class="py-6 text-center">
+                            <p class="text-lg font-bold text-gray-800">发现新版本，手动刷新页面后更新</p>
+                        </div>
+                        <div v-else class="prose prose-sm prose-gray max-w-none">
                             <div class="markdown-body" v-html="renderMarkdown(update.content, 'assistant', true)"></div>
                         </div>
                         <div class="mt-8 mb-2 flex justify-end">
-                            <button @click="close" :disabled="countdown > 0"
-                                :class="{ 'opacity-50 cursor-not-allowed': countdown > 0 }"
+                            <button @click="close" :disabled="!remoteUpdateId && countdown > 0"
+                                :class="{ 'opacity-50 cursor-not-allowed': !remoteUpdateId && countdown > 0 }"
                                 class="px-10 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg shadow-sm hover:shadow transition-all active:scale-95">
-                                知道了 <span v-if="countdown > 0">({{ countdown }}s)</span>
+                                知道了 <span v-if="!remoteUpdateId && countdown > 0">({{ countdown }}s)</span>
                             </button>
                         </div>
                     </div>
-                    <div v-show="!scrolledToBottom" class="absolute bottom-0 left-0 right-0 pt-12 pb-4 bg-gradient-to-t from-white via-white/80 to-transparent flex justify-center items-end pointer-events-none transition-opacity duration-300 rounded-b-xl">
+                    <div v-show="!remoteUpdateId && !scrolledToBottom" class="absolute bottom-0 left-0 right-0 pt-12 pb-4 bg-gradient-to-t from-white via-white/80 to-transparent flex justify-center items-end pointer-events-none transition-opacity duration-300 rounded-b-xl">
                         <div class="text-xs text-blue-500 flex items-center gap-1 animate-bounce bg-white shadow-sm border border-blue-100 px-3 py-1.5 rounded-full">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
                             向下滑动查看完整内容
@@ -990,7 +1027,7 @@
                             </div>
                             <ul class="list-disc list-outside ml-9 space-y-1.5 text-sm text-yellow-700">
                                 <li>您可以在 “世界书 -> 自动生图” 手动管理此功能。</li>
-                                <li>前往 “设置” 可以切换生图风格与比例。</li>
+                                <li>前往 “设置” 可以切换生图版本、风格与比例。</li>
                             </ul>
                         </div>
                     </div>
@@ -1153,10 +1190,15 @@
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                             </button>
                         </div>
-                        <div class="flex p-1 bg-gray-200/50 rounded-xl overflow-x-auto no-scrollbar gap-1">
+                        <div class="segmented-switch segmented-switch--compact segmented-switch--four w-full">
+                            <div class="segmented-switch__indicator" :class="{
+                                'is-position-2': tab === 'description',
+                                'is-position-3': tab === 'personality',
+                                'is-position-4': tab === 'first_mes'
+                            }"></div>
                             <button v-for="item in tabs" :key="item.value" @click="$emit('update:tab', item.value)"
-                                :class="['flex-1 px-4 py-2 text-sm font-bold transition-all rounded-lg whitespace-nowrap', tab === item.value ? 'bg-white text-primary-600 shadow-sm' : 'text-gray-500 hover:text-gray-700 hover:bg-white/50']">
-                                {{ item.label }}
+                                class="segmented-switch__option" :class="{ 'is-active': tab === item.value }">
+                                <span>{{ item.label }}</span>
                             </button>
                         </div>
                     </div>
@@ -1401,7 +1443,6 @@
                             <div v-if="!(templateData.changeLog || []).length" class="bg-white border border-dashed border-gray-200 rounded-2xl p-8 text-center text-gray-400">暂无变更记录</div>
                             <div v-else class="space-y-3">
                                 <div v-for="log in (templateData.changeLog || []).slice(0, 1)" :key="log.id" class="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
-                                    <div v-if="log.reason" class="rounded-xl bg-amber-50/70 border border-amber-100 px-3 py-2 text-xs text-amber-800 leading-relaxed">{{ log.reason }}</div>
                                     <div class="mt-3 space-y-3">
                                         <div v-for="(change, key) in (log.changes || {})" :key="key" class="rounded-xl border border-gray-100 bg-gray-50/60 p-3">
                                             <div class="text-xs font-bold text-gray-700 mb-2">{{ key }}</div>
@@ -1861,7 +1902,21 @@
             'update:page', 'update:help-topic'
         ],
         setup() {
+            const formatDuration = (value) => {
+                if (!Number.isFinite(value)) return '--';
+                if (value < 1000) return `${Math.round(value)}ms`;
+                return `${Number((value / 1000).toFixed(1))}s`;
+            };
+            const formatOutputSpeed = (record) => {
+                if (record?.isStream !== true
+                    || !Number.isFinite(record?.durationMs) || record.durationMs <= 0
+                    || !Number.isFinite(record?.outputCharacters) || record.outputCharacters <= 0) return '--';
+                return `${Math.round(record.outputCharacters * 1000 / record.durationMs)}字/s`;
+            };
             return {
+                formatDuration,
+                formatOutputSpeed,
+                formatQuota: quota => `¥${(Math.trunc(quota / 500000 * 10000) / 10000).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`,
                 filterOptions: Object.freeze([
                     { value: 'all', label: '全部', position: '' },
                     { value: 'chat', label: '主对话', position: 'is-position-2' },
@@ -1921,41 +1976,14 @@
                     </div>
                 </div>
 
-                <div class="mb-6 rounded-2xl border border-gray-200 bg-white shadow-sm">
-                    <div class="grid grid-cols-2">
-                        <div class="relative border-r border-gray-100 p-4 md:p-5">
-                            <div class="flex items-center gap-2 text-[11px] font-medium text-gray-400">
-                                <span class="h-1.5 w-1.5 rounded-full bg-primary-500"></span>
-                                <div class="flex items-center"><span>输入</span>
-                                    <settings-help topic="totalInputTokens" :open-topic="helpTopic" label="查看总输入 Token 说明" icon-class=""
-                                        popover-class="token-usage-help-popover" @toggle="$emit('update:help-topic', $event)">
-                                        汇总当前类型和时间筛选范围内，API 返回的输入 Token 减去缓存读取 Token。右侧灰色数字单独显示缓存读取 Token。
-                                    </settings-help>
-                                </div>
-                            </div>
-                            <div class="mt-2 flex items-end gap-1 font-mono leading-none">
-                                <span class="text-lg font-bold text-gray-800">{{ formatAggregate(stats.inputTokens, stats.inputTokensReports) }}</span>
-                                <span class="inline-flex items-center gap-0.5 text-base font-normal text-gray-500/80">
-                                    <svg class="h-4 w-4 flex-none" fill="none" stroke="currentColor" aria-hidden="true"><use href="#icon-arrow-down"></use></svg>
-                                    {{ formatAggregate(stats.cacheReadTokens, stats.cacheReadTokensReports) }}
-                                </span>
-                            </div>
-                        </div>
-                        <div class="relative p-4 md:p-5">
-                            <div class="flex items-center gap-2 text-[11px] font-medium text-gray-400">
-                                <span class="h-1.5 w-1.5 rounded-full bg-yellow-400"></span>
-                                <div class="flex items-center"><span>输出</span>
-                                    <settings-help topic="totalOutputTokens" :open-topic="helpTopic" label="查看总输出 Token 说明" icon-class=""
-                                        popover-class="token-usage-help-popover is-right" @toggle="$emit('update:help-topic', $event)">
-                                        汇总当前类型和时间筛选范围内，API 实际返回的输出 Token。没有返回用量的字段按 0 统计。
-                                    </settings-help>
-                                </div>
-                            </div>
-                            <div class="mt-2 flex items-end gap-1 font-mono leading-none">
-                                <span class="text-lg font-bold text-gray-800">{{ formatAggregate(stats.outputTokens, stats.outputTokensReports) }}</span>
-                            </div>
-                        </div>
+                <div class="relative mb-6 flex items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-white px-5 py-4 shadow-sm">
+                    <div class="flex min-w-0 items-center text-sm font-semibold text-gray-500"><span>总用量</span>
+                        <settings-help topic="totalTokens" :open-topic="helpTopic" label="查看总用量说明" icon-class=""
+                            popover-class="token-usage-help-popover" @toggle="$emit('update:help-topic', $event)">
+                            汇总当前类型和时间筛选范围内，输入 Token（包括缓存读取）与输出 Token 的总和。
+                        </settings-help>
                     </div>
+                    <div class="flex-shrink-0 whitespace-nowrap font-mono text-xl font-bold tabular-nums text-gray-900">{{ formatAggregate(stats.inputTokens + stats.cacheReadTokens + stats.outputTokens, stats.inputTokensReports + stats.cacheReadTokensReports + stats.outputTokensReports) }}</div>
                 </div>
 
                 <div class="flex items-center justify-between mb-3">
@@ -1965,37 +1993,45 @@
                 <div v-if="records.length > 0" class="space-y-3">
                     <article v-for="record in records" :key="record.id"
                         class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition-colors hover:border-gray-300">
-                        <div class="mb-3 flex items-start gap-3">
-                            <div class="min-w-0 flex-1">
-                                <div class="flex min-w-0 items-center gap-2">
-                                    <span class="flex flex-shrink-0 items-center gap-1.5 text-sm font-semibold text-gray-600">
-                                        <span class="h-1.5 w-1.5 rounded-full bg-primary-400"></span>{{ getTypeLabel(record.type) }}
-                                    </span>
-                                    <span class="min-w-0 flex-1 truncate text-sm text-gray-600" :title="record.model">{{ record.model || '未知模型' }}</span>
-                                </div>
-                                <div v-if="record.characterName || record.detail" class="mt-1.5 min-w-0 truncate text-xs text-gray-400">
-                                    {{ [record.characterName, record.detail].filter(Boolean).join(' · ') }}
-                                </div>
+                        <div class="mb-3 min-w-0">
+                            <div class="flex min-w-0 items-center justify-between gap-3">
+                                <span class="min-w-0 flex-1 truncate text-sm text-gray-600" :title="record.model">{{ record.model || '未知模型' }}</span>
+                                 <span class="flex-shrink-0 text-sm font-semibold text-gray-500">{{ getTypeLabel(record.type) }}</span>
                             </div>
-                            <time class="flex-shrink-0 text-xs text-gray-400">{{ formatTime(record.timestamp) }}</time>
+                            <div class="mt-1.5 flex min-w-0 items-center justify-between gap-3">
+                                <div class="flex min-w-0 items-center gap-3 text-xs text-gray-400">
+                                    <span>耗时 {{ formatDuration(record.durationMs) }}</span>
+                                    <span v-if="record.isStream === true">速度 {{ formatOutputSpeed(record) }}</span>
+                                </div>
+                                <time class="flex-shrink-0 text-xs text-gray-400">{{ formatTime(record.timestamp) }}</time>
+                            </div>
                         </div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <div class="rounded-xl border border-gray-100 bg-gray-50/70 px-3 py-3">
-                                <div class="flex items-center gap-1.5 text-xs font-medium text-gray-500"><span class="h-1.5 w-1.5 rounded-full bg-primary-500"></span>输入</div>
-                                <div class="mt-1.5 flex items-end gap-1 font-mono leading-none">
-                                    <span class="text-base font-bold text-gray-800">{{ formatCount(getUncachedInput(record)) }}</span>
+                        <div class="space-y-1.5 rounded-xl border border-gray-100 bg-gray-50/60 px-3 py-2.5">
+                            <div class="flex min-w-0 items-center justify-between gap-3 whitespace-nowrap">
+                                <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-primary-500"></span>输入
+                                </span>
+                                <span class="flex min-w-0 items-center gap-1 font-mono">
+                                    <span class="text-sm font-bold text-gray-800">{{ formatCount(getUncachedInput(record)) }}</span>
                                     <span v-if="Number(record.cacheReadTokens) > 0"
-                                        class="inline-flex items-center gap-0.5 text-sm font-normal text-gray-500/80">
-                                        <svg class="h-3.5 w-3.5 flex-none" fill="none" stroke="currentColor" aria-hidden="true"><use href="#icon-arrow-down"></use></svg>
+                                        class="inline-flex min-w-0 items-center gap-0.5 text-sm font-bold text-gray-500/80"
+                                        title="缓存读取">
+                                        <svg class="h-4 w-4 flex-none" fill="none" stroke="currentColor" aria-hidden="true"><use href="#icon-arrow-down"></use></svg>
                                         {{ formatCount(record.cacheReadTokens) }}
                                     </span>
-                                </div>
+                                </span>
                             </div>
-                            <div class="rounded-xl border border-gray-100 bg-gray-50/70 px-3 py-3">
-                                <div class="flex items-center gap-1.5 text-xs font-medium text-gray-500"><span class="h-1.5 w-1.5 rounded-full bg-yellow-400"></span>输出</div>
-                                <div class="mt-1.5 flex items-end gap-1 font-mono leading-none">
-                                    <span class="text-base font-bold text-gray-800">{{ formatCount(record.outputTokens) }}</span>
-                                </div>
+                            <div class="flex min-w-0 items-center justify-between gap-3 whitespace-nowrap">
+                                <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-yellow-400"></span>输出
+                                </span>
+                                <span class="font-mono text-sm font-bold text-gray-800">{{ formatCount(record.outputTokens) }}</span>
+                            </div>
+                            <div v-if="Number.isFinite(record.actualQuota)" class="flex min-w-0 items-center justify-between gap-3 whitespace-nowrap">
+                                <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-green-500"></span>消耗
+                                </span>
+                                <span class="font-mono text-sm font-bold text-gray-800" :title="record.usageGroup ? '计费分组：' + record.usageGroup : ''">{{ formatQuota(record.actualQuota) }}</span>
                             </div>
                         </div>
                     </article>
