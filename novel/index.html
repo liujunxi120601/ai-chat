@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <script src="../assets/js/theme.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>小说生成</title>
     <!-- Vue 3 -->
@@ -10,6 +11,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Marked for Markdown rendering -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="../assets/js/built-in-content.js"></script>
+    <script src="../assets/js/core-utils.js"></script>
     <script src="../assets/js/api-utils.js"></script>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -196,6 +199,7 @@
             transform: translateY(-20px) scale(0.95);
         }
     </style>
+    <link rel="stylesheet" href="../assets/css/theme.css">
 </head>
 <body class="h-screen flex flex-col md:flex-row overflow-hidden selection:bg-stone-300 selection:text-stone-900">
     <div id="app" class="w-full h-full flex relative">
@@ -852,7 +856,7 @@
         </transition>
         <transition name="pop">
             <div v-if="showReviewModal" class="fixed inset-0 z-[80] flex items-center justify-center p-2 md:p-4" @click.self="showReviewModal = false">
-                <div class="bg-[#f5f5f0] rounded-2xl shadow-2xl w-[95%] md:w-full max-w-6xl h-[92vh] flex flex-col overflow-hidden animate-pop-in border border-stone-200">
+                <div class="app-modal-panel bg-[#f5f5f0] rounded-2xl shadow-2xl w-[95%] md:w-full max-w-6xl h-[92vh] flex flex-col overflow-hidden animate-pop-in border border-stone-200">
                     <!-- 弹窗头部 -->
                     <div class="px-4 py-3 border-b border-[#d4d4ce] bg-[#e0e0db] flex justify-between items-center shrink-0">
                         <div class="flex items-center gap-3">
@@ -976,7 +980,7 @@
         </transition>
         <transition name="pop">
             <div v-if="showConfirmModal" class="fixed inset-0 z-[70] flex items-center justify-center p-4" @mousedown.self="cancelConfirm">
-                <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden p-6 space-y-6">
+                <div class="app-modal-panel bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden p-6 space-y-6">
                     <div class="text-center space-y-2">
                         <div v-if="confirmModalConfig.icon" class="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4" :class="confirmModalConfig.iconBg">
                             <svg class="icon w-6 h-6" :class="confirmModalConfig.iconColor" viewBox="0 0 24 24" v-html="confirmModalConfig.icon"></svg>
@@ -998,7 +1002,7 @@
         </transition>
         <transition name="pop">
             <div v-if="showSettings" class="fixed inset-0 z-50 flex items-center justify-center p-4" @mousedown.self="showSettings = false">
-                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg h-[90vh] max-h-[90vh] overflow-hidden flex flex-col">
+                <div class="app-modal-panel bg-white rounded-2xl shadow-2xl w-full max-w-lg h-[90vh] max-h-[90vh] overflow-hidden flex flex-col">
                     <div class="px-6 py-4 border-b border-stone-100 flex justify-between items-center bg-stone-50">
                         <h3 class="text-lg font-bold text-stone-800 flex items-center gap-2">
                             <svg class="icon w-5 h-5" viewBox="0 0 24 24"><path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/></svg> 设置
@@ -1115,7 +1119,7 @@
         </transition>
         <transition name="pop">
             <div v-if="showImportExportModal" class="fixed inset-0 z-[60] flex items-center justify-center p-4" @mousedown.self="showImportExportModal = false">
-                <div class="bg-white rounded-xl shadow-2xl w-full max-w-xs overflow-hidden p-6 space-y-4 relative">
+                <div class="app-modal-panel bg-white rounded-xl shadow-2xl w-full max-w-xs overflow-hidden p-6 space-y-4 relative">
                     <button @click="showImportExportModal = false" class="absolute top-3 right-3 text-stone-400 hover:text-stone-600 p-1 rounded-full hover:bg-stone-100 transition-colors">
                         <svg class="icon w-5 h-5" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
                     </button>
@@ -1201,7 +1205,7 @@
                 const isSyncingRPHub = ref(false);
                 const showApiProviderSelect = ref(false);
                 const RPHUB_PROVIDER_DEFINITIONS = [
-                    { id: 'sta1n', name: 'STA1N API', apiUrl: 'https://cdn.sta1n.cn/v1', icon: 'https://picui.ogmua.cn/s1/2026/08/21/6a87a751bf871.webp' },
+                    { id: 'sta1n', name: 'STA1N API', apiUrl: 'https://cdn.sta1n.cn/v1', icon: 'https://img.cdn1.vip/i/6a11f4d96fa99_1779561689.webp' },
                     { id: 'deepseek', name: 'DeepSeek', apiUrl: 'https://api.deepseek.com/v1', icon: 'https://www.deepseek.com/favicon.ico' },
                     { id: 'openrouter', name: 'OpenRouter', apiUrl: 'https://openrouter.ai/api/v1', icon: 'https://openrouter.ai/favicon.ico' },
                     { id: 'siliconflow', name: 'SiliconFlow', apiUrl: 'https://api.siliconflow.cn/v1', icon: 'https://siliconflow.cn/favicon.ico' }
@@ -1337,25 +1341,14 @@
                     }
                 };
 
-                const readSseContent = async (response, onContent) => {
-                    const reader = response.body.getReader();
-                    const decoder = new TextDecoder();
-                    let buffer = '';
-                    while (true) {
-                        const { done, value } = await reader.read();
-                        if (done) break;
-                        buffer += decoder.decode(value, { stream: true });
-                        const lines = buffer.split('\n');
-                        buffer = lines.pop();
-                        lines.forEach(line => {
-                            if (!line.startsWith('data: ')) return;
-                            const dataText = line.slice(6);
-                            if (dataText === '[DONE]') return;
-                            try {
-                                onContent(JSON.parse(dataText).choices[0].delta.content || '');
-                            } catch (error) { }
-                        });
-                    }
+                const requestNovelCompletion = async (options, onContent) => {
+                    const result = await window.RPHubApiClient.requestChatCompletion({
+                        url: buildApiEndpoint(settings.value.apiUrl, 'chat/completions'),
+                        apiKey: settings.value.apiKey, ...options,
+                        onDelta: ({ content }) => onContent?.(content)
+                    });
+                    if (!result.isStream) onContent?.(result.content);
+                    return result;
                 };
 
                 // 列表交错动画钩子
@@ -1548,24 +1541,14 @@
                     // 并发调用函数
                     const callAI = async (persona) => {
                         try {
-                            const response = await fetch(buildApiEndpoint(settings.value.apiUrl, 'chat/completions'), {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${settings.value.apiKey}` },
-                                body: JSON.stringify({
-                                    model: reviewModel,
-                                    messages: [
-                                        { role: "system", content: persona.systemPrompt },
-                                        { role: "user", content: fullContent }
-                                    ],
-                                    stream: true
-                                })
-                            });
-
-                            if (!response.ok) throw new Error(response.statusText);
-
-                            await readSseContent(response, content => {
-                                reviews.value[persona.id] += content;
-                            });
+                            await requestNovelCompletion({
+                                model: reviewModel,
+                                messages: [
+                                    { role: 'system', content: persona.systemPrompt },
+                                    { role: 'user', content: fullContent }
+                                ],
+                                stream: true
+                            }, content => { reviews.value[persona.id] += content; });
                             reviewStatus.value[persona.id] = 'done';
                         } catch (e) {
                             console.error(`${persona.name} 点评失败:`, e);
@@ -2327,6 +2310,12 @@
                             syncData = { settings: await readRPHubSettings() };
                         }
                         const rphubSettings = syncData.settings;
+                        if (rphubSettings.apiProviderId === 'custom2') {
+                            rphubSettings.apiProviderId = 'custom';
+                            rphubSettings.customApiUrl = rphubSettings.customApiUrl2 || rphubSettings.apiUrl || '';
+                            rphubSettings.apiProviderKeys = { ...rphubSettings.apiProviderKeys,
+                                custom: rphubSettings.apiKey || rphubSettings.apiProviderKeys?.custom2 || '' };
+                        }
                         const providerKeys = rphubSettings.apiProviderKeys && typeof rphubSettings.apiProviderKeys === 'object'
                             ? rphubSettings.apiProviderKeys
                             : {};
@@ -2335,13 +2324,12 @@
                             || '';
                         const providerDefinitions = syncData.providers || [
                             ...RPHUB_PROVIDER_DEFINITIONS,
-                            { id: 'custom', name: '自定义', apiUrl: rphubSettings.customApiUrl || '' },
-                            { id: 'custom2', name: '自定义 2', apiUrl: rphubSettings.customApiUrl2 || '' }
+                            { id: 'custom', name: '自定义', apiUrl: rphubSettings.customApiUrl || '' }
                         ];
                         const providers = providerDefinitions.map(provider => ({
                             ...provider,
                             apiKey: getProviderKey(provider.id)
-                        })).filter(provider => provider.id !== 'custom' && provider.id !== 'custom2'
+                        })).filter(provider => provider.id !== 'custom'
                             || provider.apiUrl || provider.apiKey || rphubSettings.apiProviderId === provider.id);
 
                         apiProviders.value = providers;
@@ -2373,17 +2361,9 @@
                     }
                     isLoadingModels.value = true;
                     try {
-                        const response = await fetch(buildApiEndpoint(settings.value.apiUrl, 'models'), {
-                            headers: { 'Authorization': `Bearer ${settings.value.apiKey}` }
+                        const data = await window.RPHubApiClient.requestJson({
+                            url: buildApiEndpoint(settings.value.apiUrl, 'models'), apiKey: settings.value.apiKey
                         });
-                        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                        const responseText = await response.text();
-                        let data;
-                        try {
-                            data = JSON.parse(responseText);
-                        } catch (_) {
-                            throw new Error('模型接口返回了网页内容，请检查 API 地址');
-                        }
                         if (data.data) {
                             availableModels.value = data.data.sort((a, b) => a.id.localeCompare(b.id));
                         }
@@ -2601,21 +2581,12 @@
 5. 严禁输出任何 Markdown 代码块标记（如 \`\`\`json），直接输出纯 JSON 字符串。`;
 
                     try {
-                        const response = await fetch(buildApiEndpoint(settings.value.apiUrl, 'chat/completions'), {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${settings.value.apiKey}` },
-                            body: JSON.stringify({
-                                model: commentModel,
-                                messages: [
-                                    { role: "user", content: fullContent + "\n\n" + prompt }
-                                ],
-                                stream: false
-                            })
+                        const result = await requestNovelCompletion({
+                            model: commentModel,
+                            messages: [{ role: 'user', content: fullContent + "\n\n" + prompt }],
+                            stream: false
                         });
-
-                        if (!response.ok) throw new Error(response.statusText);
-                        const data = await response.json();
-                        let content = data.choices[0].message.content;
+                        let content = result.content;
                         
                         // 清理可能存在的 Markdown 标记
                         content = content.replace(/```json/g, '').replace(/```/g, '').trim();
@@ -2770,22 +2741,11 @@ ${charPrompt}
                         // 打印发送给 AI 的完整内容
 
                         try {
-                            const response = await fetch(buildApiEndpoint(settings.value.apiUrl, 'chat/completions'), {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${settings.value.apiKey}` },
-                                body: JSON.stringify({
-                                    model: settings.value.model,
-                                    messages: context,
-                                    stream: true,
-                                    temperature: 1.0
-                                }),
-                                signal: abortController.value.signal
-                            });
-
-                            if (!response.ok) throw new Error(response.statusText);
-
                             let fullContent = '';
-                            await readSseContent(response, content => {
+                            await requestNovelCompletion({
+                                model: settings.value.model, messages: context, stream: true,
+                                temperature: 1.0, signal: abortController.value.signal
+                            }, content => {
                                 fullContent += content;
                                 streamContent.value = fullContent;
                                 nextTick(() => { if (mainScroll.value) mainScroll.value.scrollTop = mainScroll.value.scrollHeight; });
